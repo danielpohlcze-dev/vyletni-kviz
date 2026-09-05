@@ -1,0 +1,484 @@
+{
+  "questions": [
+    {
+      "question": "Které české město dalo prostřednictvím své mince jméno dnešnímu dolaru?",
+      "options": [
+        "Kutná Hora",
+        "České Budějovice",
+        "Jáchymov",
+        "Kroměříž"
+      ],
+      "correct": 2,
+      "explanation": "V Jáchymově se razily joachimsthalery, později zkráceně thalery. Z jejich názvu vzniklo anglické slovo dollar.",
+      "hard": false
+    },
+    {
+      "question": "Které moře jako jediné na světě nemá žádné pevninské pobřeží?",
+      "options": [
+        "Rudé moře",
+        "Sargasové moře",
+        "Beringovo moře",
+        "Arabské moře"
+      ],
+      "correct": 1,
+      "explanation": "Sargasové moře leží v Atlantiku. Jeho hranice netvoří pevnina, ale okolní oceánské proudy.",
+      "hard": false
+    },
+    {
+      "question": "S vynálezem čeho je nejvíce spojován český vědec Otto Wichterle?",
+      "options": [
+        "Kostkového cukru",
+        "Lodního šroubu",
+        "Bleskosvodu",
+        "Měkkých kontaktních čoček"
+      ],
+      "correct": 3,
+      "explanation": "Wichterle vyvinul materiál a postup výroby měkkých kontaktních čoček. První pokusné čočky vyráběl na zařízení ze stavebnice Merkur.",
+      "hard": false
+    },
+    {
+      "question": "Jak se jmenovala první umělá družice, která obletěla Zemi?",
+      "options": [
+        "Sputnik 1",
+        "Apollo 1",
+        "Vostok 1",
+        "Luna 1"
+      ],
+      "correct": 0,
+      "explanation": "Sovětský Sputnik 1 odstartoval roku 1957. Jeho rádiové pípání symbolicky zahájilo kosmický věk.",
+      "hard": false
+    },
+    {
+      "question": "Který ze čtyř českých národních parků jako jediný leží na Moravě?",
+      "options": [
+        "Šumava",
+        "Podyjí",
+        "Krkonoše",
+        "České Švýcarsko"
+      ],
+      "correct": 1,
+      "explanation": "Podyjí leží na jihozápadní Moravě kolem řeky Dyje. Na rakouské straně na něj navazuje národní park Thayatal.",
+      "hard": false
+    },
+    {
+      "question": "Který stát má tři hlavní města, protože v každém sídlí jiná část státní moci?",
+      "options": [
+        "Bolívie",
+        "Maroko",
+        "Jihoafrická republika",
+        "Indonésie"
+      ],
+      "correct": 2,
+      "explanation": "Jihoafrická republika má Pretorii jako sídlo výkonné moci, Kapské Město jako sídlo parlamentu a Bloemfontein jako tradiční sídlo justice.",
+      "hard": true
+    },
+    {
+      "question": "Který rybník je rozlohou největší v České republice?",
+      "options": [
+        "Svět",
+        "Rožmberk",
+        "Bezdrev",
+        "Máchovo jezero"
+      ],
+      "correct": 1,
+      "explanation": "Rožmberk u Třeboně má přibližně 489 hektarů. V 16. století jej vybudoval rybníkář Jakub Krčín.",
+      "hard": true
+    },
+    {
+      "question": "Který jazyk má na světě nejvíce rodilých mluvčích?",
+      "options": [
+        "Angličtina",
+        "Španělština",
+        "Hindština",
+        "Mandarínská čínština"
+      ],
+      "correct": 3,
+      "explanation": "Nejvíce rodilých mluvčích má mandarínská čínština. Angličtina vede teprve tehdy, započítáme-li i lidi, kteří ji používají jako další jazyk.",
+      "hard": false
+    },
+    {
+      "question": "Který vodopád je nejvyšší v České republice?",
+      "options": [
+        "Mumlavský",
+        "Pančavský",
+        "Labský",
+        "Pudlavský"
+      ],
+      "correct": 1,
+      "explanation": "Pančavský vodopád v Krkonoších padá z hrany Pančavské louky do Labského dolu a měří přibližně 148 metrů.",
+      "hard": true
+    },
+    {
+      "question": "Proč je povrch Venuše teplejší než povrch Merkuru, přestože je Venuše dál od Slunce?",
+      "options": [
+        "Venuše má hustou atmosféru a silný skleníkový efekt",
+        "Venuše vytváří více tepla ve svém jádru",
+        "Merkur odráží téměř všechno sluneční světlo",
+        "Venuši zahřívá její velký měsíc"
+      ],
+      "correct": 0,
+      "explanation": "Hustá atmosféra Venuše bohatá na oxid uhličitý zadržuje teplo mimořádně silným skleníkovým efektem.",
+      "hard": false
+    },
+    {
+      "question": "Který český vědec získal Nobelovu cenu za objev a rozvoj polarografie?",
+      "options": [
+        "Jan Evangelista Purkyně",
+        "Otto Wichterle",
+        "Jaroslav Heyrovský",
+        "Antonín Holý"
+      ],
+      "correct": 2,
+      "explanation": "Jaroslav Heyrovský získal Nobelovu cenu za chemii roku 1959. Polarografie umožňuje zkoumat látky pomocí závislosti elektrického proudu na napětí.",
+      "hard": true
+    },
+    {
+      "question": "Která smlouva po první světové válce stanovila mírové podmínky pro Německo?",
+      "options": [
+        "Trianonská smlouva",
+        "Versailleská smlouva",
+        "Brestlitevský mír",
+        "Vestfálský mír"
+      ],
+      "correct": 1,
+      "explanation": "Versailleská smlouva byla podepsána roku 1919. Další poražené státy uzavíraly samostatné smlouvy, například Maďarsko v Trianonu.",
+      "hard": false
+    },
+    {
+      "question": "Která řeka je nejdelší na území České republiky?",
+      "options": [
+        "Labe",
+        "Morava",
+        "Vltava",
+        "Dyje"
+      ],
+      "correct": 2,
+      "explanation": "Vltava měří přibližně 430 kilometrů a celá protéká Českem. Labe je celkově delší, většina jeho toku však leží mimo české území.",
+      "hard": false
+    },
+    {
+      "question": "Který světadíl je podle množství srážek nejsušší?",
+      "options": [
+        "Afrika",
+        "Austrálie",
+        "Antarktida",
+        "Jižní Amerika"
+      ],
+      "correct": 2,
+      "explanation": "Antarktida je polární poušť. Ve vnitrozemí spadne mimořádně málo srážek, přesto je zde v ledu uložena většina sladké vody planety.",
+      "hard": false
+    },
+    {
+      "question": "Která česká památka UNESCO je vrcholným dílem architekta Ludwiga Miese van der Rohe?",
+      "options": [
+        "Vila Tugendhat",
+        "Vila Müller",
+        "Jurkovičova vila",
+        "Letohrádek Hvězda"
+      ],
+      "correct": 0,
+      "explanation": "Brněnská vila Tugendhat byla dokončena roku 1930. Patří k nejvýznamnějším stavbám světového funkcionalismu.",
+      "hard": true
+    },
+    {
+      "question": "Který kov je za běžné pokojové teploty kapalný?",
+      "options": [
+        "Gallium",
+        "Rtuť",
+        "Cesium",
+        "Olovo"
+      ],
+      "correct": 1,
+      "explanation": "Rtuť taje přibližně při minus 39 °C, takže je při pokojové teplotě kapalná. Gallium taje až kolem 30 °C.",
+      "hard": false
+    },
+    {
+      "question": "Ve kterém roce se odehrála bitva na Bílé hoře?",
+      "options": [
+        "1415",
+        "1526",
+        "1620",
+        "1648"
+      ],
+      "correct": 2,
+      "explanation": "Bitva 8. listopadu 1620 ukončila české stavovské povstání a zásadně ovlivnila další vývoj českých zemí.",
+      "hard": false
+    },
+    {
+      "question": "Který orgán je největším orgánem lidského těla?",
+      "options": [
+        "Játra",
+        "Plíce",
+        "Tenké střevo",
+        "Kůže"
+      ],
+      "correct": 3,
+      "explanation": "Kůže pokrývá celý povrch těla, chrání organismus a podílí se na regulaci teploty i vnímání okolí.",
+      "hard": false
+    },
+    {
+      "question": "Kdo složil hudbu k české státní hymně Kde domov můj?",
+      "options": [
+        "Bedřich Smetana",
+        "Antonín Dvořák",
+        "František Škroup",
+        "Josef Suk"
+      ],
+      "correct": 2,
+      "explanation": "Hudbu složil František Škroup a text napsal Josef Kajetán Tyl. Píseň zazněla roku 1834 ve hře Fidlovačka.",
+      "hard": true
+    },
+    {
+      "question": "Kterou londýnskou čtvrtí prochází základní poledník o zeměpisné délce 0°?",
+      "options": [
+        "Greenwich",
+        "Westminster",
+        "Camden",
+        "Chelsea"
+      ],
+      "correct": 0,
+      "explanation": "Nultý poledník prochází Královskou observatoří v Greenwichi a stal se mezinárodním základem pro měření zeměpisné délky.",
+      "hard": false
+    },
+    {
+      "question": "Který slavný český skladatel se narodil v Litomyšli?",
+      "options": [
+        "Leoš Janáček",
+        "Bedřich Smetana",
+        "Bohuslav Martinů",
+        "Antonín Dvořák"
+      ],
+      "correct": 1,
+      "explanation": "Bedřich Smetana se narodil roku 1824 v zámeckém pivovaru v Litomyšli. Město dnes pořádá festival Smetanova Litomyšl.",
+      "hard": false
+    },
+    {
+      "question": "Ve které vrstvě atmosféry se nachází největší část ozonové vrstvy?",
+      "options": [
+        "Troposféra",
+        "Stratosféra",
+        "Mezosféra",
+        "Termosféra"
+      ],
+      "correct": 1,
+      "explanation": "Největší koncentrace ozonu leží ve stratosféře zhruba 15 až 35 kilometrů nad zemí a pohlcuje většinu škodlivého ultrafialového záření.",
+      "hard": true
+    },
+    {
+      "question": "Jaká je přibližná hloubka propasti Macocha od horního okraje ke dnu suché části?",
+      "options": [
+        "58 metrů",
+        "88 metrů",
+        "138 metrů",
+        "238 metrů"
+      ],
+      "correct": 2,
+      "explanation": "Suchá část Macochy je hluboká přibližně 138 metrů. Pod ní pokračují zatopené prostory spojené s podzemní Punkvou.",
+      "hard": true
+    },
+    {
+      "question": "Jak se jmenuje nejhlubší známý oceánský příkop na Zemi?",
+      "options": [
+        "Portorický příkop",
+        "Mariánský příkop",
+        "Jávský příkop",
+        "Peruánsko-chilský příkop"
+      ],
+      "correct": 1,
+      "explanation": "Mariánský příkop leží v západním Tichém oceánu. Jeho nejhlubší část Challenger Deep sahá téměř 11 kilometrů pod hladinu.",
+      "hard": false
+    },
+    {
+      "question": "Ve které divadelní hře se poprvé objevilo slovo robot?",
+      "options": [
+        "Bílá nemoc",
+        "Věc Makropulos",
+        "R.U.R.",
+        "Ze života hmyzu"
+      ],
+      "correct": 2,
+      "explanation": "Slovo robot se proslavilo v Čapkově hře R.U.R. z roku 1920. Samotný výraz Karlu Čapkovi navrhl jeho bratr Josef.",
+      "hard": false
+    },
+    {
+      "question": "Který plyn rostliny při fotosyntéze přijímají z ovzduší?",
+      "options": [
+        "Kyslík",
+        "Dusík",
+        "Vodík",
+        "Oxid uhličitý"
+      ],
+      "correct": 3,
+      "explanation": "Rostliny využívají oxid uhličitý a vodu k tvorbě cukrů. Jako vedlejší produkt přitom uvolňují kyslík.",
+      "hard": false
+    },
+    {
+      "question": "Kterému českému panovníkovi se říkalo král železný a zlatý?",
+      "options": [
+        "Přemysl Otakar II.",
+        "Václav II.",
+        "Karel IV.",
+        "Jiří z Poděbrad"
+      ],
+      "correct": 0,
+      "explanation": "Přemysl Otakar II. byl železný díky vojenské síle a zlatý díky bohatství. Jeho moc sahala od českých zemí až k Jadranu.",
+      "hard": true
+    },
+    {
+      "question": "Jaké je hlavní město Austrálie?",
+      "options": [
+        "Sydney",
+        "Melbourne",
+        "Canberra",
+        "Perth"
+      ],
+      "correct": 2,
+      "explanation": "Canberra byla vybrána jako kompromis mezi soupeřícími Sydney a Melbourne a hlavním městem se stala roku 1913.",
+      "hard": false
+    },
+    {
+      "question": "Která chráněná krajinná oblast je rozlohou největší v České republice?",
+      "options": [
+        "Šumava",
+        "Beskydy",
+        "Jeseníky",
+        "Český kras"
+      ],
+      "correct": 1,
+      "explanation": "CHKO Beskydy má přibližně 1 160 km² a je největší českou chráněnou krajinnou oblastí.",
+      "hard": true
+    },
+    {
+      "question": "Který měsíc je největším měsícem Sluneční soustavy?",
+      "options": [
+        "Titan",
+        "Ganymed",
+        "Europa",
+        "Měsíc"
+      ],
+      "correct": 1,
+      "explanation": "Jupiterův Ganymed je větší než planeta Merkur. Je také jediným měsícem se známým vlastním magnetickým polem.",
+      "hard": true
+    },
+    {
+      "question": "Který český skladatel napsal symfonii Z Nového světa?",
+      "options": [
+        "Antonín Dvořák",
+        "Josef Suk",
+        "Leoš Janáček",
+        "Bedřich Smetana"
+      ],
+      "correct": 0,
+      "explanation": "Antonín Dvořák ji napsal během pobytu ve Spojených státech. Jeho Devátá symfonie měla premiéru v New Yorku roku 1893.",
+      "hard": false
+    },
+    {
+      "question": "Která civilizace vybudovala horské město Machu Picchu?",
+      "options": [
+        "Mayové",
+        "Aztékové",
+        "Inkové",
+        "Olmékové"
+      ],
+      "correct": 2,
+      "explanation": "Machu Picchu vybudovali Inkové v 15. století v dnešním Peru. Evropané jej během španělského dobývání patrně neobjevili.",
+      "hard": false
+    },
+    {
+      "question": "Které české město dalo světu označení pilsner pro světlý spodně kvašený ležák?",
+      "options": [
+        "Žatec",
+        "Plzeň",
+        "České Budějovice",
+        "Velké Popovice"
+      ],
+      "correct": 1,
+      "explanation": "Pilsner odkazuje na Plzeň, kde byl roku 1842 uvařen světlý ležák nového typu, později známý jako Pilsner Urquell.",
+      "hard": false
+    },
+    {
+      "question": "Který chemický prvek má značku W?",
+      "options": [
+        "Wolfram",
+        "Vanad",
+        "Vizmut",
+        "Zinek"
+      ],
+      "correct": 0,
+      "explanation": "Značka W pochází z názvu wolfram. V angličtině se prvek nazývá tungsten, a proto může jeho značka překvapit.",
+      "hard": true
+    },
+    {
+      "question": "V kterém pohoří pramení řeka Labe?",
+      "options": [
+        "Jizerské hory",
+        "Orlické hory",
+        "Krkonoše",
+        "Hrubý Jeseník"
+      ],
+      "correct": 2,
+      "explanation": "Labe pramení na Labské louce v Krkonoších v nadmořské výšce přibližně 1 387 metrů.",
+      "hard": false
+    },
+    {
+      "question": "Která kost je nejdelší a nejsilnější v lidském těle?",
+      "options": [
+        "Holenní kost",
+        "Pažní kost",
+        "Lopatka",
+        "Stehenní kost"
+      ],
+      "correct": 3,
+      "explanation": "Stehenní kost neboli femur spojuje kyčel s kolenem a při pohybu přenáší značnou část tělesné hmotnosti.",
+      "hard": false
+    },
+    {
+      "question": "Jak se jmenuje česká skalní památka připomínající obrovské varhany, vytvořená sloupcovitou odlučností čediče?",
+      "options": [
+        "Panská skála",
+        "Tiské stěny",
+        "Prachovské skály",
+        "Čertovy kameny"
+      ],
+      "correct": 0,
+      "explanation": "Panská skála u Kamenického Šenova vznikla chladnutím čedičového magmatu. Proslavila se také ve filmu Pyšná princezna.",
+      "hard": true
+    },
+    {
+      "question": "Která skupina savců jako jediná dokáže skutečně aktivně létat?",
+      "options": [
+        "Letuchy",
+        "Kaloni a netopýři",
+        "Vakoveverky",
+        "Poletuchy"
+      ],
+      "correct": 1,
+      "explanation": "Aktivního letu jsou mezi savci schopni pouze letouni, tedy netopýři a kaloni. Ostatní uvedení savci pouze plachtí.",
+      "hard": false
+    },
+    {
+      "question": "Ve kterém městě byl roku 1415 upálen mistr Jan Hus?",
+      "options": [
+        "Basilej",
+        "Kostnice",
+        "Řezno",
+        "Norimberk"
+      ],
+      "correct": 1,
+      "explanation": "Jan Hus byl odsouzen kostnickým koncilem a upálen 6. července 1415. Jeho smrt se stala jedním z podnětů husitského hnutí.",
+      "hard": false
+    },
+    {
+      "question": "Který nezávislý stát je rozlohou nejmenší na světě?",
+      "options": [
+        "Monako",
+        "San Marino",
+        "Nauru",
+        "Vatikán"
+      ],
+      "correct": 3,
+      "explanation": "Vatikán má rozlohu přibližně 0,44 km². Je nejmenším státem světa rozlohou i počtem obyvatel.",
+      "hard": false
+    }
+  ]
+}
