@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class MainActivity extends Activity {
+    static final String DEFAULT_ENDPOINT="https://vyletni-kviz-api.daniel-pohl.chatgpt.site/generate";
     final int NAVY=Color.rgb(25,50,74), RED=Color.rgb(217,45,58), PINK=Color.rgb(179,60,134), BLUE=Color.rgb(38,119,168);
     LinearLayout root, answers; TextView player, counter, question, explanation, score;
     Button reveal, next; ArrayList<Question> quiz=new ArrayList<>(); int index=0, barca=0, dominik=0; boolean shown=false;
@@ -28,7 +29,7 @@ public class MainActivity extends Activity {
         Button settings=button("Nastavení připojení");settings.setOnClickListener(v->showSettings());root.addView(settings);
     }
     void showSettings(){base();root.addView(tv("PŘIPOJENÍ K AI",26,true));root.addView(tv("OpenAI klíč zůstává na serveru. Sem patří pouze adresa tvého serveru a osobní přístupový token.",15,false));
-        EditText url=new EditText(this);url.setHint("https://tvuj-server.example/generate");url.setText(getPreferences(0).getString("url",""));root.addView(url);
+        EditText url=new EditText(this);url.setHint(DEFAULT_ENDPOINT);url.setText(getPreferences(0).getString("url",DEFAULT_ENDPOINT));root.addView(url);
         EditText token=new EditText(this);token.setHint("Osobní přístupový token");token.setText(getPreferences(0).getString("token",""));root.addView(token);
         Button save=button("Uložit nastavení");save.setOnClickListener(v->{getPreferences(0).edit().putString("url",url.getText().toString().trim()).putString("token",token.getText().toString().trim()).apply();Toast.makeText(this,"Uloženo",Toast.LENGTH_SHORT).show();showHome();});root.addView(save);
         Button back=button("Zpět");back.setOnClickListener(v->showHome());root.addView(back);
@@ -37,7 +38,7 @@ public class MainActivity extends Activity {
         EditText topic=new EditText(this);topic.setHint("Téma, například Česko a svět");topic.setText("Český a světový všeobecný přehled");root.addView(topic);
         Spinner difficulty=new Spinner(this);difficulty.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"Namíchaná obtížnost","Lehčí","Střední","Těžší"}));root.addView(difficulty);
         Spinner count=new Spinner(this);count.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"10 otázek","20 otázek","40 otázek"}));root.addView(count);
-        TextView status=tv("",14,false);root.addView(status);Button go=button("Vygenerovat a hrát");root.addView(go);go.setOnClickListener(v->{String u=getPreferences(0).getString("url","");if(u.isEmpty()){Toast.makeText(this,"Nejdřív nastav připojení",Toast.LENGTH_LONG).show();return;}int n=new int[]{10,20,40}[count.getSelectedItemPosition()];generate(u,getPreferences(0).getString("token",""),topic.getText().toString(),difficulty.getSelectedItem().toString(),n,status,go);});
+        TextView status=tv("",14,false);root.addView(status);Button go=button("Vygenerovat a hrát");root.addView(go);go.setOnClickListener(v->{String u=getPreferences(0).getString("url",DEFAULT_ENDPOINT);if(u.isEmpty()){Toast.makeText(this,"Nejdřív nastav připojení",Toast.LENGTH_LONG).show();return;}int n=new int[]{10,20,40}[count.getSelectedItemPosition()];generate(u,getPreferences(0).getString("token",""),topic.getText().toString(),difficulty.getSelectedItem().toString(),n,status,go);});
         Button back=button("Zpět");back.setOnClickListener(v->showHome());root.addView(back);
     }
     void generate(String endpoint,String token,String topic,String diff,int count,TextView status,Button go){status.setText("Připravuji nové otázky…");go.setEnabled(false);new Thread(()->{try{JSONObject body=new JSONObject().put("topic",topic).put("difficulty",diff).put("count",count);HttpURLConnection c=(HttpURLConnection)new URL(endpoint).openConnection();c.setRequestMethod("POST");c.setRequestProperty("Content-Type","application/json");c.setRequestProperty("X-App-Token",token);c.setDoOutput(true);c.getOutputStream().write(body.toString().getBytes(StandardCharsets.UTF_8));InputStream in=c.getResponseCode()<400?c.getInputStream():c.getErrorStream();String text=read(in);if(c.getResponseCode()>=400)throw new IOException(text);parse(new JSONObject(text));runOnUiThread(this::start);}catch(Exception e){runOnUiThread(()->{status.setText("Nepodařilo se připojit: "+e.getMessage());go.setEnabled(true);});}}).start();}
