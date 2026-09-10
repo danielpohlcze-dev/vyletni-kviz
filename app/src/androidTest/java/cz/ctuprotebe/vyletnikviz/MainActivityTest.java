@@ -43,7 +43,10 @@ public class MainActivityTest {
             onView(withText("⛰  VÝLETNÍ KVÍZ")).check(matches(isDisplayed()));
             onView(withText("＋  Začít nový výlet")).perform(click());
             onView(withText("NOVÝ VÝLET")).check(matches(isDisplayed()));
-            onView(withText("+ Přidat hráče")).perform(scrollTo(), click(), click(), click());
+            onView(withText("+ Přidat hráče")).perform(scrollTo(), click());
+            onView(withText("+ Přidat hráče")).perform(scrollTo(), click());
+            onView(withText("+ Přidat hráče")).perform(scrollTo(), click());
+            onView(withText("+ Přidat hráče")).perform(scrollTo(), click());
             onView(withText("Maximum je 5 hráčů")).check(matches(isDisplayed()));
             onView(withText("＋ Přidat fotky (max. 5)")).check(matches(isDisplayed()));
         }
@@ -63,6 +66,7 @@ public class MainActivityTest {
     @Test public void offlineGamePassUndoRedoAndRevealWork() {
         try (ActivityScenario<MainActivity> ignored = ActivityScenario.launch(MainActivity.class)) {
             onView(withText("＋  Začít nový výlet")).perform(click());
+            onView(withText("Zvuky a jemné vibrace")).perform(scrollTo(), click());
             onView(withText("Připravit offline kvíz")).perform(scrollTo(), click());
             onView(withText("Hrát všeobecný kvíz")).perform(click());
             onView(withText(startsWith("Na tahu: Barča"))).check(matches(isDisplayed()));
