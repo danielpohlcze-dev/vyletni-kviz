@@ -1,6 +1,6 @@
 # Výletní kvíz pro Barču a Dominika
 
-Android aplikace s offline sadou 40 otázek a možností generovat nové kvízy přes bezpečný server.
+Android aplikace s offline sadou 40 otázek a možností generovat nové kvízy přes OpenAI.
 
 ## Funkce
 
@@ -9,6 +9,6 @@ Android aplikace s offline sadou 40 otázek a možností generovat nové kvízy 
 - stručné vysvětlení každé odpovědi
 - samostatné bodování
 - AI generování 10, 20 nebo 40 otázek
-- OpenAI API klíč pouze na serveru
+- OpenAI API klíč se zadává až v telefonu, je šifrovaný pomocí Android Keystore a není součástí APK ani repozitáře
 
 GitHub Actions sestaví instalovatelné debug APK při každém pushi na větev `main`.
