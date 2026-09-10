@@ -13,6 +13,17 @@ public final class GameRulesTest {
         check(!GameRules.hasNextPlayer(4, 5));
         if (GameRules.responder(4, 1, 5) != 0) throw new AssertionError("rotation");
         if (GameRules.responder(2, 3, 5) != 0) throw new AssertionError("rotation");
+        for (int players = 2; players <= 5; players++) {
+            for (int owner = 0; owner < players; owner++) {
+                for (int attempt = 0; attempt < players; attempt++) {
+                    int expected = (owner + attempt) % players;
+                    if (GameRules.responder(owner, attempt, players) != expected)
+                        throw new AssertionError("rotation " + players + "/" + owner + "/" + attempt);
+                    if (GameRules.hasNextPlayer(attempt, players) != (attempt + 1 < players))
+                        throw new AssertionError("pass boundary " + players + "/" + attempt);
+                }
+            }
+        }
         System.out.println("GameRulesTest OK");
     }
 
