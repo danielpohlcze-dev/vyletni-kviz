@@ -28,10 +28,18 @@ API klíč uživatel zadává v telefonu; je zašifrovaný Android Keystore a ne
 
 GitHub Actions spouští testy herních pravidel, `gradle testQualityUnitTest assembleQuality` a Android 35 instrumentační testy `connectedQualityAndroidTest`. Výsledky jsou samostatné artefakty. Testy generování zahrnují 40 slotů, opravu tématu, nesouhlas správné odpovědi, vymyšlené zdroje, neúplný výstup, duplicitní možnosti, obnovu po pádu procesu a oddělení síťové chyby od kvality kvízu.
 
-Fotografický test ověřuje odeslání intentu pro Android picker se simulovaným zrušením; nedokládá skutečné pořízení fotky. Některé stávající UI testy používají programatické kliknutí kvůli okraji emulátoru.
+Fotografický test ověřuje odeslání intentu pro Android picker se simulovaným zrušením; nedokládá skutečné pořízení fotky. Obrazovky respektují systémové lišty Androidu 15. Espresso testy obrazovek používají skutečná klepnutí; rozsáhlejší herní scénáře navíc přímo volají logiku Activity.
 
 Rozšířené Android scénáře hrají celou 40otázkovou hru, zkoušejí hodnoty přebírání pro 2–5 hráčů, obnovení Activity, zpět/vpřed, opakované události, import a deduplikaci, sdílecí intent se zrušením, šifrování testovacího klíče a vykreslení skutečného testovacího obrázku přes Android MediaStore. Tyto testy neodesílají zprávy jiným lidem ani nevolají placené OpenAI API. Fotoaparát, fyzické zvuky/vibrace a přenos fotek mezi dvěma skutečnými telefony vyžadují ruční ověření.
 
 APK je vývojové sestavení `quality` s applicationId `cz.ctuprotebe.vyletnikviz.quality` a názvem „Výletní kvíz 2.5“. Instaluje se vedle původní aplikace, protože její podpisový klíč není dostupný. Stará aplikace a její data zůstávají zachované. Do nové se klíč zadá znovu; výlety lze přenést přes Sdílet tento výlet / Importovat sdílený výlet. Přenos dat není automatický. Pro budoucí běžné aktualizace je stále nutné vyřešit stabilní neveřejný podpisový klíč; výchozí debug klíč nového CI runneru jej nenahrazuje. Fotografie uložené jako lokální URI nejsou přenosnou zálohou obrazových souborů.
+
+## Volitelný placený test skutečného API
+
+1. V [novém GitHub Actions secretu](https://github.com/danielpohlcze-dev/vyletni-kviz/settings/secrets/actions/new) vyplňte Name `OPENAI_API_KEY`, vložte klíč do Secret a zvolte Add secret. Klíč nepatří do chatu, souboru v repozitáři ani snímku obrazovky.
+2. Otevřete [Živý test AI — 10 otázek](https://github.com/danielpohlcze-dev/vyletni-kviz/actions/workflows/live-quiz.yml), zvolte Run workflow na větvi main. Alternativně jej lze spustit výslovnou změnou `tests/live-trigger.txt`.
+3. Výsledkem je artefakt `live-quiz-result`: skutečné otázky se zdroji a souhrn HTTP stavu, doby, tokenů a počtu požadavků. Klíč ani libovolné texty výjimek se nezapisují. Bez secretu se nic placeného neodešle. Běžné sestavení APK placený test nespouští.
+
+Program kompiluje přímo produkční `QuizGeneration` a `OpenAiTransport`. Zkouší i obnovu po jednom simulovaném přerušení pollingu skutečné serverové úlohy. Pro omezení nákladů povoluje nejvýše čtyři pokusy POST (autor + kontrola pro dvě skupiny po pěti), 18 000 výstupních tokenů a navíc osm webových volání na požadavek. Pokud je potřeba více oprav, test skončí neúspěchem a vykáže přijatý počet otázek. Limity nejsou pevným dolarovým rozpočtem; účtování probíhá z vloženého OpenAI kreditu. Nejde o dlouhodobý zátěžový test ani o test mobilní sítě. Výstup je třeba obsahově zkontrolovat, úspěšný běh negarantuje bezchybnost každé budoucí otázky.
 
 Dokumentace API: [model](https://developers.openai.com/api/docs/models/gpt-5.6-sol), [webové zdroje](https://developers.openai.com/api/docs/guides/tools-web-search), [úlohy na pozadí](https://developers.openai.com/api/docs/guides/background).

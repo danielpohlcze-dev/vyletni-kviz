@@ -14,6 +14,7 @@ jobs:
         with: { gradle-version: '8.9' }
       - run: mkdir -p test-out && javac -d test-out app/src/main/java/cz/ctuprotebe/vyletnikviz/GameRules.java tests/GameRulesTest.java && java -cp test-out GameRulesTest
       - run: gradle testQualityUnitTest assembleQuality
+      - run: gradle -p live-test test
       - uses: actions/upload-artifact@v4
         if: always()
         with:

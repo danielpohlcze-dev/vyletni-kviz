@@ -1,0 +1,36 @@
+name: Živý test AI — 10 otázek
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['tests/live-trigger.txt']
+permissions:
+  contents: read
+concurrency:
+  group: paid-live-quiz
+  cancel-in-progress: false
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.9'}
+      - name: Ověřit testovací program bez API
+        run: gradle -p live-test test installDist
+      - name: Vygenerovat a ověřit 10 otázek přes skutečné API
+        working-directory: live-test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: build/install/quiz-live-check/bin/quiz-live-check
+      - name: Uložit otázky a souhrn bez klíče
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-quiz-result
+          path: live-test/build/live-result/
+          retention-days: 7
+          if-no-files-found: warn

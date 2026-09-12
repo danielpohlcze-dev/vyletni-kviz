@@ -1,0 +1,11 @@
+plugins { id 'java'; id 'application' }
+repositories { mavenCentral() }
+dependencies {
+    implementation 'org.json:json:20240303'
+    testImplementation 'junit:junit:4.13.2'
+}
+sourceSets.main.java {
+    srcDirs = ['../app/src/main/java', 'src/main/java']
+    include '**/QuizGeneration.java', '**/OpenAiTransport.java', '**/LiveGenerationSmoke.java'
+}
+application { mainClass = 'cz.ctuprotebe.vyletnikviz.LiveGenerationSmoke' }

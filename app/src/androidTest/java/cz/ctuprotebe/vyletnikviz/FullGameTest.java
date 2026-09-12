@@ -21,6 +21,7 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.intent.Intents.*;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
 import static androidx.test.espresso.matcher.ViewMatchers.*;
+import static androidx.test.espresso.matcher.RootMatchers.isDialog;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 
@@ -105,15 +106,15 @@ public class FullGameTest {
             s.onActivity(a->noCrash(()->{game(a,2,1);a.answer(a.quiz.get(0).correct);a.next();
                 export[0]=TripHistory.PREFIX+new JSONArray(a.prefs.getString("history","[]")).getJSONObject(0);a.history();a.importTrip();
             }));
-            onView(withHint("Vložte text začínající VYLETNI_KVIZ_2:")).perform(replaceText(TripHistory.PREFIX+"{}"),closeSoftKeyboard());
-            onView(withText("Importovat")).perform(click());
+            onView(withHint("Vložte text začínající VYLETNI_KVIZ_2:")).inRoot(isDialog()).perform(replaceText(TripHistory.PREFIX+"{}"),closeSoftKeyboard());
+            onView(withText("Importovat")).inRoot(isDialog()).perform(click());
             s.onActivity(a->noCrash(()->{assertEquals(1,new JSONArray(a.prefs.getString("history","[]")).length());a.importTrip();}));
-            onView(withHint("Vložte text začínající VYLETNI_KVIZ_2:")).perform(replaceText(export[0]),closeSoftKeyboard());
-            onView(withText("Importovat")).perform(click());
+            onView(withHint("Vložte text začínající VYLETNI_KVIZ_2:")).inRoot(isDialog()).perform(replaceText(export[0]),closeSoftKeyboard());
+            onView(withText("Importovat")).inRoot(isDialog()).perform(click());
             s.onActivity(a->noCrash(()->{assertEquals(1,new JSONArray(a.prefs.getString("history","[]")).length());
                 a.prefs.edit().remove("history").commit();a.importTrip();}));
-            onView(withHint("Vložte text začínající VYLETNI_KVIZ_2:")).perform(replaceText(export[0]),closeSoftKeyboard());
-            onView(withText("Importovat")).perform(click());
+            onView(withHint("Vložte text začínající VYLETNI_KVIZ_2:")).inRoot(isDialog()).perform(replaceText(export[0]),closeSoftKeyboard());
+            onView(withText("Importovat")).inRoot(isDialog()).perform(click());
             s.onActivity(a->noCrash(()->assertEquals("Okoř",new JSONArray(a.prefs.getString("history","[]")).getJSONObject(0).getString("title"))));
         }
     }

@@ -10,6 +10,7 @@ import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static androidx.test.espresso.matcher.RootMatchers.isDialog;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
@@ -52,9 +53,9 @@ public class MainActivityTest {
             onView(withText("⛰  VÝLETNÍ KVÍZ")).check(matches(isDisplayed()));
             onView(withText("＋  Začít nový výlet")).perform(click());
             onView(withText("NOVÝ VÝLET")).check(matches(isDisplayed()));
-            onView(withText("+ Přidat hráče")).perform(scrollTo(), safeClick());
-            onView(withText("+ Přidat hráče")).perform(scrollTo(), safeClick());
-            onView(withText("+ Přidat hráče")).perform(scrollTo(), safeClick());
+            onView(withText("+ Přidat hráče")).perform(scrollTo(), click());
+            onView(withText("+ Přidat hráče")).perform(scrollTo(), click());
+            onView(withText("+ Přidat hráče")).perform(scrollTo(), click());
             ignored.onActivity(a -> assertEquals(5, countPlayerNames(a.findViewById(android.R.id.content))));
             onView(withText("＋ Přidat fotky (max. 5)")).perform(scrollTo()).check(matches(isDisplayed()));
         }
@@ -74,18 +75,18 @@ public class MainActivityTest {
     @Test public void offlineGamePassUndoRedoAndRevealWork() {
         try (ActivityScenario<MainActivity> ignored = ActivityScenario.launch(MainActivity.class)) {
             onView(withText("＋  Začít nový výlet")).perform(click());
-            onView(withText("Zvuky a jemné vibrace")).perform(scrollTo(), safeClick());
-            onView(withText("Připravit offline kvíz")).perform(scrollTo(), safeClick());
-            onView(withText("Hrát všeobecný kvíz")).perform(click());
+            onView(withText("Zvuky a jemné vibrace")).perform(scrollTo(), click());
+            onView(withText("Připravit offline kvíz")).perform(scrollTo(), click());
+            onView(withText("Hrát všeobecný kvíz")).inRoot(isDialog()).perform(click());
             onView(withText(startsWith("Na tahu: Barča"))).check(matches(isDisplayed()));
-            onView(withText("Neví – předat hráči Dominik")).perform(scrollTo(), safeClick());
+            onView(withText("Neví – předat hráči Dominik")).perform(scrollTo(), click());
             onView(withText(startsWith("Přebírá: Dominik"))).check(matches(isDisplayed()));
             onView(withText(containsString("pokus 2 z 2"))).check(matches(isDisplayed()));
-            onView(withText("↶ Zpět")).perform(scrollTo(), safeClick());
+            onView(withText("↶ Zpět")).perform(scrollTo(), click());
             onView(withText(startsWith("Na tahu: Barča"))).check(matches(isDisplayed()));
-            onView(withText("Vpřed ↷")).perform(scrollTo(), safeClick());
+            onView(withText("Vpřed ↷")).perform(scrollTo(), click());
             onView(withText(startsWith("Přebírá: Dominik"))).check(matches(isDisplayed()));
-            onView(withText("Neví – ukázat odpověď")).perform(scrollTo(), safeClick());
+            onView(withText("Neví – ukázat odpověď")).perform(scrollTo(), click());
             onView(withText(startsWith("PROČ:"))).check(matches(isDisplayed()));
         }
     }
@@ -94,7 +95,7 @@ public class MainActivityTest {
         try (ActivityScenario<MainActivity> ignored = ActivityScenario.launch(MainActivity.class)) {
             onView(withText("📖  Kronika výletů")).perform(click());
             onView(withText("Zatím tu není žádný odehraný výlet.")).check(matches(isDisplayed()));
-            onView(withText("Zpět")).perform(scrollTo(), safeClick());
+            onView(withText("Zpět")).perform(scrollTo(), click());
             onView(withText("⚙  Připojení k AI")).perform(click());
             onView(withText("OpenAI klíč zatím není uložený")).check(matches(isDisplayed()));
         }
@@ -157,16 +158,4 @@ public class MainActivityTest {
         return count;
     }
 
-    // Espresso's coordinate click could hit the emulator's bottom HOME bar after a long scroll.
-    // performClick still exercises the real Android listener while avoiding that emulator artefact.
-    private static ViewAction safeClick() {
-        return new ViewAction() {
-            @Override public Matcher<View> getConstraints() { return isEnabled(); }
-            @Override public String getDescription() { return "safe programmatic click"; }
-            @Override public void perform(UiController controller, View view) {
-                view.performClick();
-                controller.loopMainThreadUntilIdle();
-            }
-        };
-    }
 }
