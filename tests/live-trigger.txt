@@ -1,4 +1,5 @@
-Authorized bounded follow-up 1
-Baseline: 464830ea76785bda67f061f911f384334200350c
-Previous live run: 34705609000 (7 accepted; no recoverable checkpoint)
-Maximum 4 generation POSTs. Persist checkpoint and question evidence.
+Authorized bounded follow-up 2 (final paid follow-up)
+Resume exact checkpoint from run 34720470223 / artifact 10306089515.
+resume.json SHA256: 9e7cb69dcdb8e171be3730f7e400061809b566e3511b34cea8b92949fe8826a5
+Preserve 5 accepted questions and review the saved draft for slots 6-10.
+Maximum 4 generation POSTs; unchanged model and quality policy.

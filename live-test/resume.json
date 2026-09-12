@@ -1,0 +1,286 @@
+{
+  "feedback": "",
+  "draft": {"questions": [
+    {
+      "requested_topic": "Anglická složitější slova v kontextu a jejich význam v češtině",
+      "question": "Co znamená slovo \u201eequivocal\u201c ve větě \u201eThe results were equivocal, so the researchers could not draw a firm conclusion\u201c?",
+      "sources": [{
+        "title": "EQUIVOCAL definition in American English | Collins English Dictionary",
+        "support": "Slovník uvádí, že \u201eequivocal\u201c může označovat něco obtížně interpretovatelného, například výsledky výzkumu, které neposkytují jednoznačný závěr.",
+        "url": "https://www.collinsdictionary.com/us/dictionary/english/equivocal"
+      }],
+      "correct": 0,
+      "assigned_player": "Daneček",
+      "options": [
+        "Nejednoznačné či neprůkazné",
+        "Předem očekávané",
+        "Statisticky bezchybné",
+        "Snadno opakovatelné"
+      ],
+      "hard": true,
+      "slot": 6,
+      "explanation": "V tomto kontextu označuje \u201eequivocal\u201c výsledky, které nejsou jednoznačné a připouštějí různé výklady. Proto z nich výzkumníci nemohli vyvodit pevný závěr."
+    },
+    {
+      "requested_topic": "Bizarní svět: doložené překvapivé přírodní jevy",
+      "question": "Antarktický jev Blood Falls vypadá jako krvavě červený výtok z Taylorova ledovce. Co způsobuje jeho zbarvení?",
+      "sources": [{
+        "title": "Blood Falls, Antarctica\u2019s Dry Valleys \u2013 NASA Science",
+        "support": "NASA popisuje načervenalý výtok z Taylorova ledovce a uvádí, že jeho zbarvení pochází ze soli obsahující železo.",
+        "url": "https://science.nasa.gov/earth/earth-observatory/blood-falls-antarcticas-dry-valleys-35535/"
+      }],
+      "correct": 3,
+      "assigned_player": "Barča",
+      "options": [
+        "Mikroskopické červené řasy ve sněhu",
+        "Prach z činné sopky",
+        "Barvivo z korýšů žijících pod ledem",
+        "Sloučeniny železa ve vytékající slané vodě"
+      ],
+      "hard": false,
+      "slot": 7,
+      "explanation": "Blood Falls je načervenalý výtok z Taylorova ledovce do antarktického jezera Bonney. Zbarvení pochází ze sloučenin železa obsažených ve slané vodě vytékající z ledovce."
+    },
+    {
+      "requested_topic": "Česko: zeměpis",
+      "question": "Který kraj Česka má státní hranici zároveň s Polskem i Slovenskem?",
+      "sources": [{
+        "title": "Charakteristika Moravskoslezského kraje \u2013 Český statistický úřad",
+        "support": "Český statistický úřad uvádí hranici Moravskoslezského kraje s polským Slezským a Opolským vojvodstvím i se slovenským Žilinským krajem.",
+        "url": "https://csu.gov.cz/msk/charakteristika_moravskoslezskeho_kraje"
+      }],
+      "correct": 1,
+      "assigned_player": "Dominik",
+      "options": [
+        "Olomoucký kraj",
+        "Moravskoslezský kraj",
+        "Zlínský kraj",
+        "Liberecký kraj"
+      ],
+      "hard": false,
+      "slot": 8,
+      "explanation": "Moravskoslezský kraj hraničí na severu a východě s polskými vojvodstvími. Na jihovýchodě má zároveň hranici se slovenským Žilinským krajem."
+    },
+    {
+      "requested_topic": "Historie vědy",
+      "question": "Který renesanční anatom vydal v roce 1543 sedmidílné dílo \u201eDe humani corporis fabrica\u201c?",
+      "sources": [{
+        "title": "Historical Anatomies on the Web: Vesalius: Author & Title Description",
+        "support": "Americká Národní lékařská knihovna označuje Andrease Vesalia za autora díla vydaného roku 1543 a popisuje jeho vlastní pitvy i opravy některých Galénových představ.",
+        "url": "https://www.nlm.nih.gov/exhibition/historicalanatomies/vesalius_bio.html"
+      }],
+      "correct": 2,
+      "assigned_player": "Daneček",
+      "options": [
+        "William Harvey",
+        "Paracelsus",
+        "Andreas Vesalius",
+        "Ambroise Paré"
+      ],
+      "hard": true,
+      "slot": 9,
+      "explanation": "Andreas Vesalius vydal sedmidílné dílo De humani corporis fabrica v roce 1543. Při jeho tvorbě vycházel z vlastních pečlivých pitev a některými pozorováními zpochybnil Galénovo učení."
+    },
+    {
+      "requested_topic": "Česká kultura",
+      "question": "Který český výtvarník vytvořil cyklus dvaceti velkoformátových obrazů nazvaný \u201eSlovanská epopej\u201c?",
+      "sources": [{
+        "title": "Alfons Mucha: The Slav Epic \u2013 GHMP",
+        "support": "Galerie hlavního města Prahy uvádí, že Slovanská epopej je Muchova série dvaceti rozměrných obrazů vytvořená v letech 1912\u20131926.",
+        "url": "https://www.ghmp.cz/en/exhibitions/alfons-mucha-the-slav-epic/"
+      }],
+      "correct": 0,
+      "assigned_player": "Barča",
+      "options": [
+        "Alfons Mucha",
+        "František Kupka",
+        "Josef Lada",
+        "Max Švabinský"
+      ],
+      "hard": false,
+      "slot": 10,
+      "explanation": "Slovanskou epopej vytvořil Alfons Mucha jako sérii dvaceti velkoformátových obrazů. Na tomto cyklu pracoval v letech 1912 až 1926."
+    }
+  ]},
+  "as_of": "2026-09-12",
+  "accepted": [
+    {
+      "requested_topic": "Česko: historie",
+      "checked_at": "2026-09-12",
+      "question": "Který český král vydal 7. dubna 1348 zakládací listinu pražského obecného učení, dnešní Univerzity Karlovy?",
+      "sources": [{
+        "title": "Zakládací listina \u2013 Univerzita Karlova",
+        "support": "Zakládací listina uvádí datum 7. dubna 1348, označuje Karla za římského a českého krále a zřizuje obecné učení v Praze včetně panovnické ochrany jeho členů.",
+        "url": "https://cuni.cz/UK-1391.html"
+      }],
+      "correct": 2,
+      "review_note": "Správně je Karel IV. Otázka je jednoznačná, odpovídá českým dějinám a pro základní obtížnost je přiměřená; vysvětlení je celé doloženo.",
+      "assigned_player": "Barča",
+      "options": [
+        "Václav IV.",
+        "Přemysl Otakar II.",
+        "Karel IV.",
+        "Jiří z Poděbrad"
+      ],
+      "model": "gpt-5.6-sol",
+      "hard": false,
+      "slot": 1,
+      "explanation": "Zakládací listina byla vydána 7. dubna 1348 jménem českého a římského krále Karla IV. Dokument zřídil v Praze obecné učení a jeho členům slíbil panovnickou ochranu."
+    },
+    {
+      "requested_topic": "Svět: příroda",
+      "checked_at": "2026-09-12",
+      "question": "Který z těchto tučňáků je největším žijícím druhem?",
+      "sources": [{
+        "title": "Emperor penguin \u2013 Australian Antarctic Program",
+        "support": "Australský antarktický program označuje tučňáka císařského za největší z 18 druhů tučňáků a uvádí hmotnost dospělců až 40 kilogramů na začátku období rozmnožování.",
+        "url": "https://www.antarctica.gov.au/about-antarctica/animals/penguins/emperor-penguin/"
+      }],
+      "correct": 0,
+      "review_note": "Správně je tučňák císařský. Všechny možnosti jsou druhy tučňáků, ale pouze císařský je největší; otázka je vhodná pro lehčí přírodovědný slot.",
+      "assigned_player": "Dominik",
+      "options": [
+        "Tučňák císařský",
+        "Tučňák královský",
+        "Tučňák oslí",
+        "Tučňák kroužkový"
+      ],
+      "model": "gpt-5.6-sol",
+      "hard": false,
+      "slot": 2,
+      "explanation": "Tučňák císařský je největší z 18 uváděných druhů tučňáků. Dospělý jedinec může na začátku období rozmnožování vážit až 40 kilogramů."
+    },
+    {
+      "requested_topic": "Věda a technika",
+      "checked_at": "2026-09-12",
+      "question": "Na hyperjemném přechodu v základním stavu kterého izotopu je založena definice sekundy v soustavě SI?",
+      "sources": [{
+        "title": "SI base unit: second \u2013 BIPM",
+        "support": "Oficiální definice BIPM váže sekundu na neporušený hyperjemný přechod v základním stavu atomu cesia-133 a stanovuje jeho frekvenci přesně na 9 192 631 770 Hz.",
+        "url": "https://www.bipm.org/en/si-base-units/second"
+      }],
+      "correct": 3,
+      "review_note": "Správně je cesium-133. Ostatní izotopy jsou věrohodné fyzikální distraktory, ale oficiální definice SI určuje jedinou odpověď; odbornější znalost odpovídá označení hard=true.",
+      "assigned_player": "Daneček",
+      "options": [
+        "Rubidium-87",
+        "Stroncium-87",
+        "Ytterbium-171",
+        "Cesium-133"
+      ],
+      "model": "gpt-5.6-sol",
+      "hard": true,
+      "slot": 3,
+      "explanation": "Definice sekundy používá frekvenci hyperjemného přechodu v základním stavu atomu cesia-133. Její pevně stanovená hodnota činí přesně 9 192 631 770 hertzů."
+    },
+    {
+      "requested_topic": "Český rap",
+      "checked_at": "2026-09-12",
+      "question": "Který český rapový projekt vznikl kolem roku 2002 ve složení Kato a DJ Skupla?",
+      "sources": [{
+        "title": "Prago Union \u2013 Biografie",
+        "support": "Oficiální biografie uvádí vznik Prago Union někdy v roce 2002 ve složení Kato a DJ Skupla; zároveň potvrzuje Katovy přezdívky Def a Deph i jeho dřívější vedení skupiny Chaozz.",
+        "url": "https://www.pragounion.cz/bio/"
+      }],
+      "correct": 1,
+      "review_note": "Správně je Prago Union. Otázka se obsahově přesně drží českého rapu, možnosti jsou srovnatelné české rapové projekty a vysvětlení odpovídá oficiální biografii.",
+      "assigned_player": "Barča",
+      "options": [
+        "Peneři Strýčka Homeboye",
+        "Prago Union",
+        "Pio Squad",
+        "WWW"
+      ],
+      "model": "gpt-5.6-sol",
+      "hard": false,
+      "slot": 4,
+      "explanation": "Prago Union vznikli kolem roku 2002 ve složení Kato a DJ Skupla. Kato, známý také jako Def či Deph, předtím působil jako lídr rapové skupiny Chaozz."
+    },
+    {
+      "requested_topic": "Slovenské politické události v letech 2020\u20132024",
+      "checked_at": "2026-09-12",
+      "question": "Kterého politika jmenovala prezidentka Zuzana Čaputová 1. dubna 2021 předsedou nové slovenské vlády?",
+      "sources": [{
+        "title": "Prezidentka vymenovala vládu Eduarda Hegera",
+        "support": "Oficiální web slovenské hlavy státu uvádí, že Zuzana Čaputová 1. dubna 2021 jmenovala novou vládu vedenou Eduardem Hegerem a zmiňuje dohodu čtyř koaličních stran o změnách ve vládě.",
+        "url": "https://www.prezident.sk/article/prezidentka-vymenovala-vladu-edurada-hegera/"
+      }],
+      "correct": 2,
+      "review_note": "Správně je Eduard Heger. Konkrétní datum odlišuje jednotlivé slovenské premiéry jednoznačně a událost přesně spadá do požadovaného období 2020\u20132024.",
+      "assigned_player": "Dominik",
+      "options": [
+        "Igor Matovič",
+        "Peter Pellegrini",
+        "Eduard Heger",
+        "Ľudovít Ódor"
+      ],
+      "model": "gpt-5.6-sol",
+      "hard": false,
+      "slot": 5,
+      "explanation": "Dne 1. dubna 2021 prezidentka Zuzana Čaputová jmenovala členy nové vlády v čele s Eduardem Hegerem. Vznik kabinetu vycházel z dohody čtyř koaličních stran."
+    }
+  ],
+  "version": 1,
+  "plan": [
+    {
+      "requested_topic": "Česko: historie",
+      "assigned_player": "Barča",
+      "slot": 1,
+      "hard": false
+    },
+    {
+      "requested_topic": "Svět: příroda",
+      "assigned_player": "Dominik",
+      "slot": 2,
+      "hard": false
+    },
+    {
+      "requested_topic": "Věda a technika",
+      "assigned_player": "Daneček",
+      "slot": 3,
+      "hard": true
+    },
+    {
+      "requested_topic": "Český rap",
+      "assigned_player": "Barča",
+      "slot": 4,
+      "hard": false
+    },
+    {
+      "requested_topic": "Slovenské politické události v letech 2020\u20132024",
+      "assigned_player": "Dominik",
+      "slot": 5,
+      "hard": false
+    },
+    {
+      "requested_topic": "Anglická složitější slova v kontextu a jejich význam v češtině",
+      "assigned_player": "Daneček",
+      "slot": 6,
+      "hard": true
+    },
+    {
+      "requested_topic": "Bizarní svět: doložené překvapivé přírodní jevy",
+      "assigned_player": "Barča",
+      "slot": 7,
+      "hard": false
+    },
+    {
+      "requested_topic": "Česko: zeměpis",
+      "assigned_player": "Dominik",
+      "slot": 8,
+      "hard": false
+    },
+    {
+      "requested_topic": "Historie vědy",
+      "assigned_player": "Daneček",
+      "slot": 9,
+      "hard": true
+    },
+    {
+      "requested_topic": "Česká kultura",
+      "assigned_player": "Barča",
+      "slot": 10,
+      "hard": false
+    }
+  ]
+}
