@@ -43,6 +43,25 @@ public final class LiveGenerationSmoke {
         return result;
     }
 
+    static JSONObject restore(Path path) throws Exception {
+        JSONObject fresh=journal();
+        if(!Files.exists(path))return fresh;
+        if(Files.size(path)>4*1024*1024)throw new IOException("Invalid checkpoint size");
+        JSONObject saved=new JSONObject(Files.readString(path));
+        if(saved.getInt("version")!=QuizGeneration.VERSION||!saved.getJSONArray("plan").similar(fresh.getJSONArray("plan")))
+            throw new IOException("Checkpoint does not match the test fixture");
+        if(saved.getJSONArray("accepted").length()>10)throw new IOException("Invalid checkpoint");
+        return saved;
+    }
+
+    static void saveCheckpoint(Path output,JSONObject state)throws Exception {
+        // This fixture journal contains questions, web results and response IDs, never credentials.
+        Path temp=output.resolve("resume.tmp");Files.writeString(temp,state.toString(2));
+        Files.move(temp,output.resolve("resume.json"),StandardCopyOption.REPLACE_EXISTING);
+        Files.writeString(output.resolve("accepted-questions.json"),new JSONObject().put("complete",false)
+                .put("questions",state.getJSONArray("accepted")).toString(2));
+    }
+
     public static void main(String[] args) throws Exception {
         String key=System.getenv("OPENAI_API_KEY");
         if(key==null||key.trim().isEmpty()) {
@@ -50,14 +69,15 @@ public final class LiveGenerationSmoke {
             System.exit(2);return;
         }
         Path output=Paths.get("build/live-result");Files.createDirectories(output);
-        JSONObject journal=journal();Counters counts=new Counters();long start=System.currentTimeMillis();
+        JSONObject journal=restore(Paths.get("resume.json"));Counters counts=new Counters();long start=System.currentTimeMillis();
         // A serialized checkpoint is used to simulate process loss without exposing the journal as an artifact.
         final String[] checkpoint={journal.toString()};AtomicInteger resumes=new AtomicInteger();
         JSONObject report=null;boolean passed=false;
         try {
             while(true) {
                 final JSONObject state=journal;
-                OpenAiTransport transport=new OpenAiTransport(key,state,()->checkpoint[0]=state.toString()) {
+                QuizGeneration.Checkpoint save=()->{checkpoint[0]=state.toString();saveCheckpoint(output,state);};
+                OpenAiTransport transport=new OpenAiTransport(key,state,save) {
                     @Override JSONObject http(String method,String url,JSONObject body)throws Exception {
                         if("POST".equals(method)) {
                             counts.beforePost();
@@ -82,7 +102,7 @@ public final class LiveGenerationSmoke {
                     }
                 };
                 try {
-                    JSONObject quiz=new QuizGeneration(state,transport,()->checkpoint[0]=state.toString(),System.out::println).run();
+                    JSONObject quiz=new QuizGeneration(state,transport,save,System.out::println).run();
                     if(quiz.getJSONArray("questions").length()!=10)throw new IOException();
                     Files.writeString(output.resolve("quiz.json"),quiz.toString(2));
                     report=new JSONObject().put("passed",true).put("questions",10);passed=true;break;
@@ -95,9 +115,11 @@ public final class LiveGenerationSmoke {
             }
         } catch(Exception e) { report=safeFailure(e); }
         finally {
+            saveCheckpoint(output,journal);
             if(report==null)report=new JSONObject().put("passed",false).put("failure_type","Interrupted");
             report.put("model",QuizGeneration.MODEL).put("counts",counts.json())
                     .put("accepted_questions",journal.getJSONArray("accepted").length())
+                    .put("quality_feedback",journal.optString("feedback"))
                     .put("elapsed_seconds",(System.currentTimeMillis()-start)/1000)
                     .put("live_recovery_exercised",counts.interruptionInjected&&resumes.get()>0)
                     .put("limit_note","Max 4 POST attempts, 18000 output tokens and 8 web-tool calls per request. Token limits are not a fixed dollar budget.");
