@@ -13,7 +13,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.9' }
       - run: mkdir -p test-out && javac -d test-out app/src/main/java/cz/ctuprotebe/vyletnikviz/GameRules.java tests/GameRulesTest.java && java -cp test-out GameRulesTest
-      - run: gradle assembleDebug
+      - run: gradle testDebugUnitTest assembleDebug
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: generation-unit-test-results
+          path: app/build/test-results/testDebugUnitTest/
       - uses: actions/upload-artifact@v4
         with:
           name: Vyletni-kviz-APK

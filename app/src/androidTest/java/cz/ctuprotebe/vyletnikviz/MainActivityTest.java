@@ -60,7 +60,7 @@ public class MainActivityTest {
         }
     }
 
-    @Test public void photoButtonReallyLaunchesAndroidDocumentPicker() {
+    @Test public void photoButtonRequestsAndroidDocumentPicker() {
         Intents.init();
         intending(hasAction(Intent.ACTION_OPEN_DOCUMENT)).respondWith(
                 new Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null));
@@ -97,6 +97,54 @@ public class MainActivityTest {
             onView(withText("Zpět")).perform(scrollTo(), safeClick());
             onView(withText("⚙  Připojení k AI")).perform(click());
             onView(withText("OpenAI klíč zatím není uložený")).check(matches(isDisplayed()));
+        }
+    }
+
+    @Test public void personalTopicsAndDifficultyStayWithEachOfFivePlayers() {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(a -> {
+                try {
+                    a.cfg = new MainActivity.Config(); a.cfg.count = 40;
+                    a.cfg.cats.add("Česko"); a.cfg.cats.add("Svět"); a.cfg.cats.add("Historie");
+                    a.players.clear();
+                    String[] names = {"Barča", "Dominik", "Daneček", "Kája", "Honzík"};
+                    String[] topics = {"Český rap", "Slovenská politika po roce 2020", "Anglická slovíčka", "Hokej", "Vlaky"};
+                    for (int i = 0; i < 5; i++) a.players.add(new MainActivity.Player(names[i], topics[i], a.BLUE));
+                    org.json.JSONArray plan = a.generationPlan();
+                    for (int i = 0; i < 40; i++) {
+                        org.json.JSONObject slot = plan.getJSONObject(i);
+                        assertEquals(names[i % 5], slot.getString("assigned_player"));
+                        if ((i / 5 + 1) % 3 == 0) {
+                            assertEquals(topics[i % 5], slot.getString("requested_topic"));
+                            assertEquals("silny_okruh", slot.getString("mode"));
+                        }
+                    }
+                    org.json.JSONObject context = a.generationContext();
+                    a.cfg = null; a.players.clear(); a.restoreGenerationContext(context);
+                    assertEquals(5, a.players.size()); assertEquals(40, a.cfg.count);
+                    assertEquals("Český rap", a.players.get(0).topic);
+                } catch (Exception e) { throw new AssertionError(e); }
+            });
+        }
+    }
+
+    @Test public void questionSourcesSurviveSavedGameAndAppearOnlyAfterReveal() {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(a -> {
+                try {
+                    a.quick(); a.cfg.sound = false;
+                    org.json.JSONObject q = a.quiz.get(0).json();
+                    q.put("sources", new org.json.JSONArray().put(new org.json.JSONObject()
+                            .put("url", "https://example.org/test-fixture").put("title", "Testovací zdroj")
+                            .put("support", "Simulovaný zdroj pro test uložení.")));
+                    q.put("requested_topic", "Historie");
+                    a.parse(new org.json.JSONObject().put("questions", new org.json.JSONArray().put(q)));
+                    a.start(); a.game.answered = true; a.question(); a.resume();
+                    assertEquals("Historie", a.quiz.get(0).json().getString("requested_topic"));
+                    assertEquals(1, a.quiz.get(0).sources.length());
+                } catch (Exception e) { throw new AssertionError(e); }
+            });
+            onView(withText("↗ Testovací zdroj")).perform(scrollTo()).check(matches(isDisplayed()));
         }
     }
 
