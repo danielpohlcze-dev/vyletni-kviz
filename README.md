@@ -24,10 +24,10 @@ API klíč uživatel zadává v telefonu; je zašifrovaný Android Keystore a ne
 
 ## Ověření
 
-GitHub Actions spouští testy herních pravidel, `gradle testDebugUnitTest assembleDebug` a Android 35 instrumentační testy. Výsledky jsou samostatné artefakty. Testy generování zahrnují 40 slotů, opravu tématu, nesouhlas správné odpovědi, vymyšlené zdroje, neúplný výstup, duplicitní možnosti, obnovu po pádu procesu a oddělení síťové chyby od kvality kvízu.
+GitHub Actions spouští testy herních pravidel, `gradle testQualityUnitTest assembleQuality` a Android 35 instrumentační testy `connectedQualityAndroidTest`. Výsledky jsou samostatné artefakty. Testy generování zahrnují 40 slotů, opravu tématu, nesouhlas správné odpovědi, vymyšlené zdroje, neúplný výstup, duplicitní možnosti, obnovu po pádu procesu a oddělení síťové chyby od kvality kvízu.
 
 Fotografický test ověřuje odeslání intentu pro Android picker se simulovaným zrušením; nedokládá skutečné pořízení fotky. Některé stávající UI testy používají programatické kliknutí kvůli okraji emulátoru.
 
-APK je vývojové sestavení. Pro spolehlivé aktualizace na stejném telefonu je nutný stabilní neveřejný podpisový klíč; výchozí debug klíč nového CI runneru jej nenahrazuje. Před odinstalací staré verze je potřeba exportovat historii. Fotografie uložené jako lokální URI nejsou přenosnou zálohou obrazových souborů.
+APK je vývojové sestavení `quality` s applicationId `cz.ctuprotebe.vyletnikviz.quality` a názvem „Výletní kvíz 2.5“. Instaluje se vedle původní aplikace, protože její podpisový klíč není dostupný. Stará aplikace a její data zůstávají zachované. Do nové se klíč zadá znovu; výlety lze přenést přes Sdílet tento výlet / Importovat sdílený výlet. Přenos dat není automatický. Pro budoucí běžné aktualizace je stále nutné vyřešit stabilní neveřejný podpisový klíč; výchozí debug klíč nového CI runneru jej nenahrazuje. Fotografie uložené jako lokální URI nejsou přenosnou zálohou obrazových souborů.
 
 Dokumentace API: [model](https://developers.openai.com/api/docs/models/gpt-5.6-sol), [webové zdroje](https://developers.openai.com/api/docs/guides/tools-web-search), [úlohy na pozadí](https://developers.openai.com/api/docs/guides/background).

@@ -13,16 +13,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.9' }
       - run: mkdir -p test-out && javac -d test-out app/src/main/java/cz/ctuprotebe/vyletnikviz/GameRules.java tests/GameRulesTest.java && java -cp test-out GameRulesTest
-      - run: gradle testDebugUnitTest assembleDebug
+      - run: gradle testQualityUnitTest assembleQuality
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: generation-unit-test-results
-          path: app/build/test-results/testDebugUnitTest/
+          path: app/build/test-results/testQualityUnitTest/
       - uses: actions/upload-artifact@v4
         with:
           name: Vyletni-kviz-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/quality/app-quality.apk
   android-ui-test:
     runs-on: ubuntu-latest
     steps:
@@ -43,7 +43,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          script: gradle connectedDebugAndroidTest || (adb logcat -d > app/build/emulator-logcat.txt && exit 1)
+          script: gradle connectedQualityAndroidTest || (adb logcat -d > app/build/emulator-logcat.txt && exit 1)
       - name: Uložit důkazy z emulátoru
         if: always()
         uses: actions/upload-artifact@v4

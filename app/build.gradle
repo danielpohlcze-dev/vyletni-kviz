@@ -9,8 +9,20 @@ android {
         targetSdk 35
         versionCode 9
         versionName '2.5.0'
+        manifestPlaceholders = [appLabel: 'Výletní kvíz']
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
+    // The previous CI debug signing key is unavailable. This variant installs alongside it,
+    // preserving the user's original app, credentials and trip history.
+    buildTypes {
+        quality {
+            initWith debug
+            applicationIdSuffix '.quality'
+            manifestPlaceholders = [appLabel: 'Výletní kvíz 2.5']
+            matchingFallbacks = ['debug']
+        }
+    }
+    testBuildType 'quality'
 }
 
 dependencies {
