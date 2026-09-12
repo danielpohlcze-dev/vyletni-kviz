@@ -118,4 +118,11 @@ public class QuizGenerationTest {
         assertEquals("high",b.getJSONObject("reasoning").getString("effort"));assertTrue(b.getBoolean("background"));
         assertFalse(b.has("temperature"));assertEquals("web_search_call.action.sources",b.getJSONArray("include").getString(0));
     }
+    @Test public void reviewerDoesNotReceiveAuthorsAnswerIndex() throws Exception {
+        JSONObject j=journal(1),draft=new JSONObject().put("questions",new JSONArray().put(question(1)));
+        JSONObject b=new QuizGeneration(j,null,null,null).request(j.getJSONArray("plan"),draft,new JSONArray(),"");
+        JSONObject data=new JSONObject(b.getJSONArray("input").getJSONObject(1).getString("content"));
+        assertFalse(data.getJSONObject("draft").getJSONArray("questions").getJSONObject(0).has("correct"));
+        assertEquals(1,draft.getJSONArray("questions").getJSONObject(0).getInt("correct"));
+    }
 }

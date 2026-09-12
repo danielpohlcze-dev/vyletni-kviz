@@ -249,10 +249,11 @@ final class QuizGeneration {
                 + "Silné téma dodrž OBSAHEM: Český rap není obecný dějepis ani angličtina. Zelná polévka není guláš. "
                 + "Ke každé správné odpovědi napiš 2–3 krátké naučné věty bez dalšího nedoloženého tvrzení. ";
         String task = review
-                ? "Nezávisle vyřeš a ověř každou otázku v návrhu. Autorův correct ignoruj při hledání odpovědi. "
+                ? "Nezávisle vyřeš a ověř každou otázku v návrhu. Autorův index odpovědi je záměrně skrytý. "
                     + "Nic nepřepisuj. Vrať posudek pro každý slot v přesném pořadí. answer_index=-1 pokud odpověď nelze určit. "
                     + "topic_match kontroluje skutečný obsah, unambiguous všechny čtyři možnosti, fact_supported samotný fakt "
                     + "a explanation_supported celé vysvětlení. appropriate_difficulty kontroluje obtížnost podle slotu. "
+                    + "Zkontroluj také existing_questions; přeformulované opakování stejného faktu zamítni pomocí unambiguous=false. "
                     + "Při pochybnosti příslušné pole nastav false a v reason napiš konkrétní problém. sources musí pocházet z TVÉHO vyhledávání."
                 : "Vytvoř otázku pro každý slot v plánu v přesném pořadí. Kopíruj slot, assigned_player, requested_topic a hard. "
                     + "Téma je závazné; příslušnost k němu nelze nahradit pouhým štítkem. correct je index 0–3. "
@@ -260,7 +261,12 @@ final class QuizGeneration {
                     + "Nevracej žádné tvrzení 'verified'; kontrola proběhne odděleně. Neopakuj již hotové otázky ani stejný fakt přeformulovaný.";
         JSONObject data = new JSONObject().put("as_of", journal.getString("as_of")).put("slots", slots)
                 .put("existing_questions", accepted).put("repair_feedback", feedback);
-        if (review) data.put("draft", draft);
+        if (review) {
+            JSONObject blindDraft = new JSONObject(draft.toString());
+            JSONArray questions = blindDraft.getJSONArray("questions");
+            for (int i = 0; i < questions.length(); i++) questions.getJSONObject(i).remove("correct");
+            data.put("draft", blindDraft);
+        }
         JSONArray input = new JSONArray().put(new JSONObject().put("role", "system").put("content", policy + task))
                 .put(new JSONObject().put("role", "user").put("content", data.toString()));
         return new JSONObject().put("model", MODEL).put("reasoning", new JSONObject().put("effort", "high"))
