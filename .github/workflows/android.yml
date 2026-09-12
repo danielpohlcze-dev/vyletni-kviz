@@ -44,7 +44,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          script: gradle connectedQualityAndroidTest || (adb logcat -d > app/build/emulator-logcat.txt && exit 1)
+          script: bash tests/run-android-ui.sh
       - name: Uložit důkazy z emulátoru
         if: always()
         uses: actions/upload-artifact@v4
@@ -54,3 +54,4 @@ jobs:
             app/build/reports/androidTests/
             app/build/outputs/androidTest-results/
             app/build/emulator-logcat.txt
+            app/build/ui-screenshots/

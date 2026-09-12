@@ -25,6 +25,7 @@ import android.widget.EditText;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.espresso.intent.Intents;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.espresso.UiController;
@@ -42,6 +43,10 @@ public class MainActivityTest {
     @Before public void resetApp() {
         Context context = ApplicationProvider.getApplicationContext();
         context.getSharedPreferences("quiz", Context.MODE_PRIVATE).edit().clear().commit();
+        androidx.test.espresso.Espresso.setFailureHandler((error,matcher)->{
+            screenshot("failure-"+System.currentTimeMillis());
+            new androidx.test.espresso.base.DefaultFailureHandler(context).handle(error,matcher);
+        });
     }
 
     @After public void cleanIntents() {
@@ -51,6 +56,7 @@ public class MainActivityTest {
     @Test public void homeSetupAndFivePlayersAreReachable() {
         try (ActivityScenario<MainActivity> ignored = ActivityScenario.launch(MainActivity.class)) {
             onView(withText("⛰  VÝLETNÍ KVÍZ")).check(matches(isDisplayed()));
+            screenshot("home");
             onView(withText("＋  Začít nový výlet")).perform(click());
             onView(withText("NOVÝ VÝLET")).check(matches(isDisplayed()));
             onView(withText("+ Přidat hráče")).perform(scrollTo(), click());
@@ -88,6 +94,7 @@ public class MainActivityTest {
             onView(withText(startsWith("Přebírá: Dominik"))).check(matches(isDisplayed()));
             onView(withText("Neví – ukázat odpověď")).perform(scrollTo(), click());
             onView(withText(startsWith("PROČ:"))).check(matches(isDisplayed()));
+            screenshot("revealed-question");
         }
     }
 
@@ -147,6 +154,16 @@ public class MainActivityTest {
             });
             onView(withText("↗ Testovací zdroj")).perform(scrollTo()).check(matches(isDisplayed()));
         }
+    }
+
+    static void screenshot(String name) {
+        try {
+            android.graphics.Bitmap b=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
+            java.io.File folder=new java.io.File(InstrumentationRegistry.getInstrumentation().getTargetContext().getExternalFilesDir(null),"test-screens");
+            folder.mkdirs();
+            try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(folder,name+".png"))){b.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}
+            b.recycle();
+        } catch(Exception ignored) { }
     }
 
     private static int countPlayerNames(View view) {

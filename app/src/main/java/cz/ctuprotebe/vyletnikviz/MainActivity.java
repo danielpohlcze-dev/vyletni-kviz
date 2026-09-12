@@ -50,10 +50,10 @@ public class MainActivity extends Activity {
  Button secondary(String s){Button b=btn(s);b.setTextColor(NAVY);b.setBackground(shape(Color.WHITE,22));return b;}
  EditText edit(String hint,String value){EditText e=new EditText(this);e.setHint(hint);e.setText(value);e.setTextSize(17);e.setTextColor(INK);e.setHintTextColor(Color.rgb(112,122,120));e.setPadding(18,10,18,10);e.setMinHeight(58);e.setBackground(shape(Color.WHITE,18));gap(e,8);return e;}
  Spinner spin(String... a){Spinner s=new Spinner(this);s.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,a));return s;}
- void base(){ScrollView s=new ScrollView(this);s.setFillViewport(true);s.setBackgroundColor(CREAM);root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(28,34,28,52);s.addView(root);
+ void base(){FrameLayout viewport=new FrameLayout(this);viewport.setBackgroundColor(CREAM);ScrollView s=new ScrollView(this);s.setFillViewport(true);s.setBackgroundColor(CREAM);root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(28,34,28,52);s.addView(root);viewport.addView(s,new FrameLayout.LayoutParams(-1,-1));
   // Android 15 draws behind system bars; keep taps and titles inside the usable viewport.
-  if(Build.VERSION.SDK_INT>=35){s.setOnApplyWindowInsetsListener((v,insets)->{android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout()|WindowInsets.Type.ime());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);return WindowInsets.CONSUMED;});}
-  setContentView(s);s.requestApplyInsets();getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+  if(Build.VERSION.SDK_INT>=35){viewport.setOnApplyWindowInsetsListener((v,insets)->{android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout()|WindowInsets.Type.ime());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);return WindowInsets.CONSUMED;});}
+  setContentView(viewport);viewport.requestApplyInsets();getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
  }
  void title(String a,String b){TextView h=tv(a,30,true);h.setTextColor(NAVY);h.setLetterSpacing(.03f);root.addView(h);if(b!=null){TextView sub=tv(b,16,false);sub.setTextColor(Color.rgb(80,92,88));root.addView(sub);}}
  void section(String s){TextView h=tv(s,20,true);h.setTextColor(NAVY);h.setPadding(8,24,8,8);root.addView(h);}
