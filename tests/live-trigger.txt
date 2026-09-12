@@ -1,0 +1,2 @@
+Run one bounded live test of 10 quiz questions after the owner confirmed OPENAI_API_KEY is stored in GitHub Actions secrets.
+Requested 2026-09-12.
