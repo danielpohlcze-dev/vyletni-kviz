@@ -2,6 +2,8 @@
 
 Android aplikace pro 2–5 pojmenovaných hráčů u jednoho telefonu. Pevné pořadí, přebírání otázek, body, kronika výletů a fotografie. Připravená hra funguje offline.
 
+Při „Neví“ se náhodně vyřadí chybná možnost, dokud zbývají alespoň dvě. Další hráči mohou otázku převzít za nižší bodovou hodnotu; správná možnost se nikdy automaticky nevyřazuje. Opakované zpracování stejné odpovědi ani výsledků nesmí připsat body nebo historii dvakrát. Import kontroluje strukturu záznamu a stejný identifikátor výletu znovu nezapočítává.
+
 ## AI příprava ve verzi 2.5.0
 
 - GPT-5.6 Sol, reasoning high, Responses API; 10/20/30/40 otázek po skupinách nejvýše pěti.
@@ -27,6 +29,8 @@ API klíč uživatel zadává v telefonu; je zašifrovaný Android Keystore a ne
 GitHub Actions spouští testy herních pravidel, `gradle testQualityUnitTest assembleQuality` a Android 35 instrumentační testy `connectedQualityAndroidTest`. Výsledky jsou samostatné artefakty. Testy generování zahrnují 40 slotů, opravu tématu, nesouhlas správné odpovědi, vymyšlené zdroje, neúplný výstup, duplicitní možnosti, obnovu po pádu procesu a oddělení síťové chyby od kvality kvízu.
 
 Fotografický test ověřuje odeslání intentu pro Android picker se simulovaným zrušením; nedokládá skutečné pořízení fotky. Některé stávající UI testy používají programatické kliknutí kvůli okraji emulátoru.
+
+Rozšířené Android scénáře hrají celou 40otázkovou hru, zkoušejí hodnoty přebírání pro 2–5 hráčů, obnovení Activity, zpět/vpřed, opakované události, import a deduplikaci, sdílecí intent se zrušením, šifrování testovacího klíče a vykreslení skutečného testovacího obrázku přes Android MediaStore. Tyto testy neodesílají zprávy jiným lidem ani nevolají placené OpenAI API. Fotoaparát, fyzické zvuky/vibrace a přenos fotek mezi dvěma skutečnými telefony vyžadují ruční ověření.
 
 APK je vývojové sestavení `quality` s applicationId `cz.ctuprotebe.vyletnikviz.quality` a názvem „Výletní kvíz 2.5“. Instaluje se vedle původní aplikace, protože její podpisový klíč není dostupný. Stará aplikace a její data zůstávají zachované. Do nové se klíč zadá znovu; výlety lze přenést přes Sdílet tento výlet / Importovat sdílený výlet. Přenos dat není automatický. Pro budoucí běžné aktualizace je stále nutné vyřešit stabilní neveřejný podpisový klíč; výchozí debug klíč nového CI runneru jej nenahrazuje. Fotografie uložené jako lokální URI nejsou přenosnou zálohou obrazových souborů.
 
