@@ -1,2 +1,4 @@
-Run one bounded live test of 10 quiz questions after the owner confirmed OPENAI_API_KEY is stored in GitHub Actions secrets.
-Requested 2026-09-12.
+Authorized bounded follow-up 1
+Baseline: 464830ea76785bda67f061f911f384334200350c
+Previous live run: 34705609000 (7 accepted; no recoverable checkpoint)
+Maximum 4 generation POSTs. Persist checkpoint and question evidence.
