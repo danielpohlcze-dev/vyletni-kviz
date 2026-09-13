@@ -13,8 +13,37 @@ final class QuizGeneration {
     interface Transport { JSONObject call(JSONObject request) throws Exception; }
     interface Checkpoint { void save() throws Exception; }
     interface Progress { void show(String text); }
-    static final class QualityException extends IOException {
+    static class QualityException extends IOException {
         QualityException(String message) { super(message); }
+    }
+
+    /** Terminal API state is not the same thing as a wrong quiz answer. */
+    static final class ResponseException extends QualityException {
+        final String status, reason;
+        ResponseException(String status, String reason) {
+            super(responseMessage(status, reason)); this.status = status; this.reason = reason;
+        }
+        boolean outputLimit() { return "incomplete".equals(status) && "max_output_tokens".equals(reason); }
+    }
+
+    static String responseMessage(String status, String reason) {
+        if ("max_output_tokens".equals(reason))
+            return "AI dosáhla limitu délky odpovědi i pro tuto skupinu otázek. Přijaté otázky i hotový návrh zůstaly uložené. Příprava je pozastavená, aby se požadavek dál automaticky neopakoval.";
+        if ("content_filter".equals(reason) || "refused".equals(status))
+            return "AI odmítla část zadání. Upravte téma; stejný požadavek se automaticky neopakuje.";
+        if ("failed".equals(status)) return "Úloha skončila chybou na straně AI. Hotové části jsou uložené; zkuste pokračovat později.";
+        if ("cancelled".equals(status)) return "Serverová úloha byla zrušena. Hotové části jsou uložené.";
+        return "Server nevrátil dokončenou odpověď. Příčina není uvedena; stejný požadavek se automaticky neopakuje.";
+    }
+
+    static String safeStatus(JSONObject raw) {
+        String status = raw.optString("status");
+        return Arrays.asList("completed", "incomplete", "failed", "cancelled", "queued", "in_progress").contains(status) ? status : "unknown";
+    }
+    static String safeReason(JSONObject raw) {
+        JSONObject details = raw.optJSONObject("incomplete_details");
+        String reason = details == null ? "" : details.optString("reason");
+        return Arrays.asList("max_output_tokens", "content_filter").contains(reason) ? reason : "unknown";
     }
 
     private final JSONObject journal;
@@ -30,32 +59,46 @@ final class QuizGeneration {
     JSONObject run() throws Exception {
         JSONArray plan = journal.getJSONArray("plan");
         JSONArray accepted = journal.getJSONArray("accepted");
+        // Migrate an old stopped preparation, never change a request that is still being polled.
+        if (!journal.has("batch_size") && !journal.has("pending_response") && !journal.has("pending_result")
+                && journal.optString("feedback").startsWith("AI nedokončila odpověď."))
+            journal.put("batch_size", 2);
         int repairs = 0;
         while (accepted.length() < plan.length()) {
             if (Thread.currentThread().isInterrupted()) throw new java.io.InterruptedIOException();
-            JSONArray slots = missing(plan, accepted);
+            JSONObject draft = journal.optJSONObject("draft");
+            JSONArray slots = draft == null ? missing(plan, accepted, batchSize()) : draftSlots(plan, draft);
+            String phase = draft == null ? "author" : "review";
+            String failure = null;
             try {
-                JSONObject draft = journal.optJSONObject("draft");
                 if (draft == null) {
-                    progress.show("Připraveno " + accepted.length() + "/" + plan.length() + " • Hledám fakta a tvořím otázky…");
+                    progress.show("Schváleno " + accepted.length() + "/" + plan.length()
+                            + " • Hledám fakta pro skupinu " + slots.length() + " otázek…");
                     JSONObject raw = transport.call(request(slots, null, accepted, journal.optString("feedback")));
-                    JSONObject parsed = decode(raw);
-                    JSONArray questions = parsed.getJSONArray("questions");
+                    recordResponse(phase, slots, raw);
+                    JSONArray questions = decode(raw).getJSONArray("questions");
                     require(questions.length() == slots.length(), "AI nedodržela počet otázek v této skupině.");
-                    Set<String> urls = sourceUrls(raw);
-                    Set<String> seen = questionKeys(accepted);
-                    for (int i = 0; i < questions.length(); i++) {
-                        JSONObject q = questions.getJSONObject(i);
-                        validateQuestion(q, slots.getJSONObject(i), urls, seen);
-                    }
+                    Set<String> urls = sourceUrls(raw), seen = questionKeys(accepted);
+                    for (int i = 0; i < questions.length(); i++)
+                        validateQuestion(questions.getJSONObject(i), slots.getJSONObject(i), urls, seen);
                     draft = new JSONObject().put("questions", questions);
                     journal.put("draft", draft);
                     consumed();
                 }
-                progress.show("Připraveno " + accepted.length() + "/" + plan.length() + " • Kontroluji odpovědi, témata a zdroje…");
-                JSONArray questions = draft.getJSONArray("questions");
-                // Fresh request: the reviewer does not inherit the author's conversation.
-                JSONObject raw = transport.call(request(slots, draft, accepted, ""));
+
+                phase = "review";
+                // After an interrupted review, check just a smaller slice of the saved draft.
+                slots = draftSlots(plan, draft);
+                JSONArray questions = new JSONArray();
+                JSONArray savedQuestions = draft.getJSONArray("questions");
+                for (int i = 0; i < slots.length(); i++)
+                    questions.put(findSlot(savedQuestions, slots.getJSONObject(i).getInt("slot")));
+                JSONObject reviewDraft = new JSONObject().put("questions", questions);
+                progress.show("Schváleno " + accepted.length() + "/" + plan.length()
+                        + " • Vytvořeno dalších " + savedQuestions.length()
+                        + " • Ověřuji " + questions.length() + " odpovědí a jejich zdroje…");
+                JSONObject raw = transport.call(request(slots, reviewDraft, accepted, ""));
+                recordResponse(phase, slots, raw);
                 JSONArray reviews = decode(raw).getJSONArray("reviews");
                 require(reviews.length() == questions.length(), "Kontrola neposoudila všechny otázky.");
                 Set<String> urls = sourceUrls(raw);
@@ -63,49 +106,77 @@ final class QuizGeneration {
                 StringBuilder feedback = new StringBuilder();
                 Set<Integer> reviewed = new HashSet<>();
                 for (int i = 0; i < reviews.length(); i++) {
-                    JSONObject review = reviews.getJSONObject(i);
-                    JSONObject q = questions.getJSONObject(i);
+                    JSONObject review = reviews.getJSONObject(i), q = questions.getJSONObject(i);
                     require(review.getInt("slot") == q.getInt("slot") && reviewed.add(review.getInt("slot")),
                             "Kontrola zaměnila pořadí otázek.");
                     boolean ok = review.optBoolean("topic_match") && review.optBoolean("unambiguous")
                             && review.optBoolean("explanation_supported") && review.optBoolean("appropriate_difficulty")
                             && review.optBoolean("fact_supported") && review.optInt("answer_index", -1) == q.getInt("correct");
+                    String reason = review.optString("reason", "Nedostatečné doložení odpovědi.");
                     if (ok) {
                         try { validateSources(review.getJSONArray("sources"), urls); }
-                        catch (QualityException e) { ok = false; }
+                        catch (QualityException e) { ok = false; reason = e.getMessage(); }
                     }
+                    record("decision", phase, new JSONArray().put(q.getInt("slot")), ok ? "eligible" : "rejected", reason);
                     if (ok) {
-                        q.put("sources", review.getJSONArray("sources"));
-                        q.put("review_note", review.getString("reason"));
-                        q.put("checked_at", journal.getString("as_of"));
-                        q.put("model", MODEL);
-                        passed.put(q);
+                        // Do not mutate the stored draft until the complete review is validated.
+                        JSONObject verified = new JSONObject(q.toString());
+                        verified.put("sources", review.getJSONArray("sources"));
+                        verified.put("review_note", review.getString("reason"));
+                        verified.put("checked_at", journal.getString("as_of")).put("model", MODEL);
+                        passed.put(verified);
                     } else {
-                        feedback.append("Slot ").append(q.getInt("slot")).append(": ")
-                                .append(review.optString("reason", "Nedostatečné doložení odpovědi."))
+                        feedback.append("Slot ").append(q.getInt("slot")).append(": ").append(reason)
                                 .append(" Původní zamítnutá otázka: ").append(q.getString("question")).append('\n');
                     }
                 }
-                // Commit the complete reviewed batch atomically; never expose a partial quiz.
                 for (int i = 0; i < passed.length(); i++) accepted.put(passed.get(i));
-                journal.remove("draft");
-                journal.put("feedback", feedback.toString());
-                consumed();
+                JSONArray remaining = new JSONArray();
+                for (int i = 0; i < savedQuestions.length(); i++) {
+                    JSONObject q = savedQuestions.getJSONObject(i);
+                    if (!reviewed.contains(q.getInt("slot"))) remaining.put(q);
+                }
+                if (remaining.length() == 0) journal.remove("draft");
+                else journal.put("draft", new JSONObject().put("questions", remaining));
                 if (feedback.length() > 0) {
-                    if (++repairs > MAX_REPAIRS) throw new QualityException("Některé otázky se nepodařilo spolehlivě doložit. Hotové otázky jsou uložené.");
-                    progress.show("Nahrazuji sporné otázky • Hotové zůstávají uložené.");
-                } else repairs = 0;
+                    String previous = journal.optString("feedback");
+                    String accumulated = previous + feedback;
+                    journal.put("feedback", accumulated.substring(Math.max(0, accumulated.length() - 4000)));
+                    failure = feedback.toString();
+                } else if (accepted.length() == plan.length()) journal.remove("feedback");
+                consumed();
+            } catch (ResponseException e) {
+                // The terminal job cannot finish later. Keep the draft, retire only that response.
+                if (e.outputLimit() && slots.length() > 1) {
+                    int smaller = Math.max(1, slots.length() / 2);
+                    journal.put("batch_size", smaller);
+                    journal.put("feedback", "Předchozí odpověď překročila limit. Zpracuj jen zadanou menší skupinu a piš stručně, ale dolož všechny požadované údaje.");
+                    record("recovery", phase, slotIds(slots), "smaller_batch", "Nová velikost skupiny: " + smaller);
+                    consumed();
+                    progress.show("Odpověď byla příliš dlouhá • Pokračuji po " + smaller + " otázkách, hotové zůstávají.");
+                    continue;
+                }
+                consumed();
+                throw e;
             } catch (JSONException e) {
-                journal.remove("draft");
-                journal.put("feedback", "Předchozí výstup měl chybný formát. Dodrž schéma a přesný plán.");
+                failure = "Předchozí výstup měl chybný formát. Dodrž schéma a přesný plán.";
+                journal.put("feedback", failure);
+                if ("author".equals(phase)) journal.remove("draft");
+                record("validation", phase, slotIds(slots), "invalid_format", failure);
                 consumed();
-                if (++repairs > MAX_REPAIRS) throw new QualityException("AI opakovaně vrátila neúplný formát. Hotová část je uložená.");
             } catch (QualityException e) {
-                journal.remove("draft");
-                journal.put("feedback", e.getMessage());
+                failure = e.getMessage();
+                journal.put("feedback", failure);
+                if ("author".equals(phase)) journal.remove("draft");
+                record("validation", phase, slotIds(slots), "rejected", failure);
                 consumed();
-                if (++repairs > MAX_REPAIRS) throw e;
             }
+            // Count each failed pass once. Exceptions thrown here do not re-enter the catch above.
+            if (failure != null) {
+                if (++repairs > MAX_REPAIRS)
+                    throw new QualityException("Příprava ani po dvou opravných pokusech neprošla kontrolou. " + failure);
+                progress.show("Opravuji skupinu • Pokus " + repairs + "/" + MAX_REPAIRS + " • Hotové otázky zůstávají uložené.");
+            } else repairs = 0;
         }
         JSONArray ordered = new JSONArray();
         Set<String> seen = new HashSet<>();
@@ -118,14 +189,44 @@ final class QuizGeneration {
         return new JSONObject().put("questions", ordered);
     }
 
+    int batchSize() { return Math.max(1, Math.min(BATCH_SIZE, journal.optInt("batch_size", BATCH_SIZE))); }
+
+    private JSONArray draftSlots(JSONArray plan, JSONObject draft) throws Exception {
+        JSONArray slots = new JSONArray(), questions = draft.getJSONArray("questions");
+        require(questions.length() > 0, "Uložený návrh je prázdný.");
+        for (int i = 0; i < questions.length() && i < batchSize(); i++) {
+            JSONObject slot = findSlot(plan, questions.getJSONObject(i).getInt("slot"));
+            require(slot != null, "Uložený návrh neodpovídá plánu.");
+            slots.put(slot);
+        }
+        return slots;
+    }
+    static JSONArray slotIds(JSONArray slots) throws Exception {
+        JSONArray ids = new JSONArray();
+        for (int i = 0; i < slots.length(); i++) ids.put(slots.getJSONObject(i).getInt("slot"));
+        return ids;
+    }
+    private void recordResponse(String phase, JSONArray slots, JSONObject raw) throws Exception {
+        record("response", phase, slotIds(slots), safeStatus(raw), safeReason(raw));
+    }
+    private void record(String kind, String phase, JSONArray slots, String status, String reason) throws Exception {
+        JSONArray events = journal.optJSONArray("events");
+        if (events == null) { events = new JSONArray(); journal.put("events", events); }
+        while (events.length() >= 100) events.remove(0);
+        events.put(new JSONObject().put("kind", kind).put("phase", phase).put("slots", slots)
+                .put("status", status).put("reason", reason.substring(0, Math.min(1000, reason.length())))
+                .put("at", System.currentTimeMillis()));
+    }
     private void consumed() throws Exception {
         journal.remove("pending_response"); journal.remove("pending_result");
         checkpoint.save();
     }
-
     static JSONArray missing(JSONArray plan, JSONArray accepted) throws JSONException {
+        return missing(plan, accepted, BATCH_SIZE);
+    }
+    static JSONArray missing(JSONArray plan, JSONArray accepted, int limit) throws JSONException {
         JSONArray result = new JSONArray();
-        for (int i = 0; i < plan.length() && result.length() < BATCH_SIZE; i++)
+        for (int i = 0; i < plan.length() && result.length() < limit; i++)
             if (findSlot(accepted, plan.getJSONObject(i).getInt("slot")) == null) result.put(plan.getJSONObject(i));
         return result;
     }
@@ -189,14 +290,15 @@ final class QuizGeneration {
     }
 
     static JSONObject decode(JSONObject response) throws Exception {
-        require("completed".equals(response.optString("status")), "AI nedokončila odpověď. Neúplný kvíz nelze spustit.");
+        if (!"completed".equals(response.optString("status")))
+            throw new ResponseException(safeStatus(response), safeReason(response));
         JSONArray output = response.getJSONArray("output");
         StringBuilder text = new StringBuilder();
         for (int i = 0; i < output.length(); i++) {
             JSONArray content = output.getJSONObject(i).optJSONArray("content");
             for (int j = 0; content != null && j < content.length(); j++) {
                 JSONObject item = content.getJSONObject(j);
-                require(!"refusal".equals(item.optString("type")), "AI odmítla zadané téma. Zvolte jiné zadání.");
+                if ("refusal".equals(item.optString("type"))) throw new ResponseException("refused", "content_filter");
                 if ("output_text".equals(item.optString("type"))) text.append(item.getString("text"));
             }
         }

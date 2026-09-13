@@ -108,6 +108,16 @@ public class MainActivityTest {
         }
     }
 
+    @Test public void incompleteResponseDialogExplainsApiLimitWithoutClaimingBadFacts() {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(a -> a.showGenerationError(new QuizGeneration.ResponseException("incomplete", "max_output_tokens")));
+            onView(withText("AI požadavek nedokončila")).inRoot(isDialog()).check(matches(isDisplayed()));
+            onView(withText(containsString("limitu délky odpovědi"))).inRoot(isDialog()).check(matches(isDisplayed()));
+            onView(withText("Později")).inRoot(isDialog()).perform(click());
+            onView(withText("⛰  VÝLETNÍ KVÍZ")).check(matches(isDisplayed()));
+        }
+    }
+
     @Test public void personalTopicsAndDifficultyStayWithEachOfFivePlayers() {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             scenario.onActivity(a -> {

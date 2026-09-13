@@ -11,6 +11,7 @@ class OpenAiTransport implements QuizGeneration.Transport {
     private final String apiKey;
     private final JSONObject journal;
     private final QuizGeneration.Checkpoint checkpoint;
+    private final QuizGeneration.Progress progress;
     volatile boolean paused;
     private volatile HttpURLConnection active;
 
@@ -20,7 +21,12 @@ class OpenAiTransport implements QuizGeneration.Transport {
     }
 
     OpenAiTransport(String apiKey, JSONObject journal, QuizGeneration.Checkpoint checkpoint) {
+        this(apiKey, journal, checkpoint, text -> {});
+    }
+
+    OpenAiTransport(String apiKey, JSONObject journal, QuizGeneration.Checkpoint checkpoint, QuizGeneration.Progress progress) {
         this.apiKey = apiKey; this.journal = journal; this.checkpoint = checkpoint;
+        this.progress = progress;
     }
 
     void pause() {
@@ -37,6 +43,7 @@ class OpenAiTransport implements QuizGeneration.Transport {
         JSONObject pending = journal.optJSONObject("pending_response");
         JSONObject response;
         if (pending == null) {
+            progress.show("Odesílám novou úlohu…");
             // Retry only failures before any server connection; an ambiguous POST timeout is not replayed.
             response = null;
             for (int attempt = 0; response == null; attempt++) {
@@ -48,15 +55,21 @@ class OpenAiTransport implements QuizGeneration.Transport {
             }
             String id = response.optString("id");
             if (!id.matches("resp_[A-Za-z0-9_-]+")) throw new IOException("Server neposkytl identifikátor přípravy. Zkuste to znovu.");
-            pending = new JSONObject().put("id", id).put("phase", phase);
+            pending = new JSONObject().put("id", id).put("phase", phase).put("started_at", System.currentTimeMillis());
             journal.put("pending_response", pending);
             checkpoint.save();
         } else {
             if (!phase.equals(pending.getString("phase"))) throw new IOException("Uložená fáze přípravy neodpovídá zadání.");
+            progress.show("Navazuji na již odeslanou úlohu…");
             response = retrieve(pending.getString("id"));
         }
+        long started = pending.optLong("started_at", System.currentTimeMillis());
         int polls = 0;
         while ("queued".equals(response.optString("status")) || "in_progress".equals(response.optString("status"))) {
+            long seconds = Math.max(0, (System.currentTimeMillis() - started) / 1000);
+            progress.show(("queued".equals(response.optString("status")) ? "Čekám na uvolnění AI" : "AI právě pracuje")
+                    + " • " + (seconds / 60) + ":" + String.format(java.util.Locale.ROOT, "%02d", seconds % 60)
+                    + " • Stav potvrzen serverem");
             if (++polls > 450) throw new SocketTimeoutException("Příprava stále běží. Můžete se k ní později vrátit.");
             waitForPoll(2000);
             response = retrieve(pending.getString("id"));
@@ -65,6 +78,7 @@ class OpenAiTransport implements QuizGeneration.Transport {
         // The engine consumes result + ID in the same checkpoint as draft / accepted questions.
         journal.put("pending_result", response);
         checkpoint.save();
+        progress.show("completed".equals(response.optString("status")) ? "Odpověď dorazila, zpracovávám ji…" : "Server úlohu ukončil, vyhodnocuji její stav…");
         return response;
     }
 
@@ -124,6 +138,7 @@ class OpenAiTransport implements QuizGeneration.Transport {
         return "OpenAI nepřijalo požadavek (HTTP " + code + "). Hotová část zůstává uložená.";
     }
     static String errorTitle(Exception e) {
+        if (e instanceof QuizGeneration.ResponseException) return "AI požadavek nedokončila";
         if (e instanceof UnknownHostException || e instanceof ConnectException) return "Nepodařilo se připojit";
         if (e instanceof SocketTimeoutException) return "Čekání na server se přerušilo";
         if (e instanceof QuizGeneration.QualityException) return "Část otázek potřebuje další kontrolu";

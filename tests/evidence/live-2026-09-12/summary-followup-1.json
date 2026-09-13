@@ -1,0 +1,18 @@
+{
+  "elapsed_seconds": 329,
+  "counts": {
+    "simulated_poll_interruption": true,
+    "web_tool_calls": 20,
+    "get_attempts": 151,
+    "output_tokens": 15346,
+    "input_tokens": 180519,
+    "post_attempts": 4
+  },
+  "live_recovery_exercised": true,
+  "failure_type": "BudgetExceeded",
+  "model": "gpt-5.6-sol",
+  "limit_note": "Max 4 POST attempts, 18000 output tokens and 8 web-tool calls per request. Token limits are not a fixed dollar budget.",
+  "passed": false,
+  "accepted_questions": 5,
+  "quality_feedback": ""
+}

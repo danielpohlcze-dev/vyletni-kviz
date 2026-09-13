@@ -7,8 +7,8 @@ android {
         applicationId 'cz.ctuprotebe.vyletnikviz'
         minSdk 26
         targetSdk 35
-        versionCode 9
-        versionName '2.5.0'
+        versionCode 10
+        versionName '2.6.0'
         manifestPlaceholders = [appLabel: 'Výletní kvíz']
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -17,8 +17,8 @@ android {
     buildTypes {
         quality {
             initWith debug
-            applicationIdSuffix '.quality'
-            manifestPlaceholders = [appLabel: 'Výletní kvíz 2.5']
+            applicationIdSuffix '.quality26'
+            manifestPlaceholders = [appLabel: 'Výletní kvíz 2.6']
             matchingFallbacks = ['debug']
         }
     }

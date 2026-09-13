@@ -57,4 +57,24 @@ public class OpenAiTransportTest {
             @Override JSONObject http(String m,String u,JSONObject b){fail("Paused job must not contact API");return null;}
         };t.pause();assertThrows(java.io.InterruptedIOException.class,()->t.call(body()));
     }
+    @Test public void reportsActualServerProgressAndPreservesTerminalReasonForGenerator() throws Exception {
+        List<String> progress=new ArrayList<>(),calls=new ArrayList<>();JSONObject journal=QuizGenerationTest.journal(1);
+        OpenAiTransport t=new OpenAiTransport("fake-test-key",journal,()->{},progress::add){
+            @Override JSONObject http(String method,String url,JSONObject body)throws Exception{
+                calls.add(method);
+                if(calls.size()==1)return new JSONObject().put("id","resp_saved").put("status","queued");
+                if(calls.size()==2)return new JSONObject().put("id","resp_saved").put("status","in_progress");
+                return new JSONObject().put("id","resp_saved").put("status","incomplete")
+                        .put("incomplete_details",new JSONObject().put("reason","max_output_tokens"));
+            }
+            @Override void waitForPoll(long millis){}
+        };
+        JSONObject raw=t.call(body());
+        assertEquals(Arrays.asList("POST","GET","GET"),calls);
+        assertTrue(progress.stream().anyMatch(s->s.startsWith("Čekám na uvolnění AI")));
+        assertTrue(progress.stream().anyMatch(s->s.startsWith("AI právě pracuje")));
+        QuizGeneration.ResponseException e=assertThrows(QuizGeneration.ResponseException.class,()->QuizGeneration.decode(raw));
+        assertEquals("AI požadavek nedokončila",OpenAiTransport.errorTitle(e));
+        assertTrue(e.outputLimit());assertFalse(OpenAiTransport.errorMessage(e).contains("kredit"));
+    }
 }

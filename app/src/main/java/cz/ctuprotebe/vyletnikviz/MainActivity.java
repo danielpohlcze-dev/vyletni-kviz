@@ -106,11 +106,12 @@ public class MainActivity extends Activity {
   if(!AI_BUSY.compareAndSet(false,true)){toast("Předchozí příprava se ještě ukládá. Zkuste pokračovat za chvíli.");return;}
   generationRunning=true;base();title("PŘIPRAVUJI KVÍZ",cfg.title+" • "+cfg.count+" otázek");
   TextView progress=tv("Navazuji na uloženou přípravu…",20,true);root.addView(progress);
-  root.addView(tv("Otázky vznikají po menších skupinách. Každou kontroluji proti zdrojům a zadanému tématu. Příprava může trvat několik minut.",16,false));
+  TextView serverStatus=tv("Připojuji se k AI…",15,false);root.addView(serverStatus);
+  root.addView(tv("Počet schválených otázek se zvýší až po kontrole. Hledání faktů i kontrola mají vlastní průběh. Při příliš dlouhé odpovědi skupinu zmenším a hotové návrhy zachovám.",16,false));
   root.addView(tv("Hotové části se průběžně ukládají. Po přerušení můžete pokračovat z hlavní nabídky.",15,false));
   Button pause=secondary("Pozastavit a uložit");root.addView(pause);
   QuizGeneration.Checkpoint save=()->{if(!prefs.edit().putString("ai_pending",journal.toString()).commit())throw new IOException("Přípravu nelze uložit.");};
-  aiTransport=new OpenAiTransport(key,journal,save);
+  aiTransport=new OpenAiTransport(key,journal,save,text->runOnUiThread(()->{if(!isDestroyed())serverStatus.setText(text);}));
   pause.setOnClickListener(v->{pause.setEnabled(false);pause.setText("Ukládám přípravu…");aiTransport.pause();generationThread.interrupt();});
   generationThread=new Thread(()->{
    try{JSONObject complete=new QuizGeneration(journal,aiTransport,save,text->runOnUiThread(()->{if(!isDestroyed())progress.setText(text);})).run();
