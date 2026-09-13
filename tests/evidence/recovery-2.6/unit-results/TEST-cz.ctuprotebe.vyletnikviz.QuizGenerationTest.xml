@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-09-13T06:04:17" hostname="runnervmlun5p" time="0.056">
+  <properties/>
+  <testcase name="batchesFortyQuestionsWithoutLosingSlots" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.034"/>
+  <testcase name="rejectsMissingSearchAndIncompleteOrRefusedOutput" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.002"/>
+  <testcase name="requestRequiresSearchAndUsesStrongerModelWithoutTemperature" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.001"/>
+  <testcase name="reviewNetworkFailureResumesSavedDraftAfterProcessRestart" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.004"/>
+  <testcase name="repairsWrongTopicWithoutDiscardingAcceptedQuestion" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.003"/>
+  <testcase name="rejectsDuplicateOptionsWrongOwnerAndWrongDifficulty" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.004"/>
+  <testcase name="refusesFabricatedUrlEvenWithValidLookingInstitutionName" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.0"/>
+  <testcase name="reviewerDoesNotReceiveAuthorsAnswerIndex" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.001"/>
+  <testcase name="cannotPlayWhenIndependentAnswerDisagrees" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.002"/>
+  <testcase name="acceptsOnlyCompletedSearchBackedQuizAndPreservesMetadata" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.003"/>
+  <testcase name="refusesDuplicateQuestionsAcrossBatches" classname="cz.ctuprotebe.vyletnikviz.QuizGenerationTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

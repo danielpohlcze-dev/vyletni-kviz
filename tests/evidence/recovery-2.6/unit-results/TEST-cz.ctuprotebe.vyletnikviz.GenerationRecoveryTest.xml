@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-13T06:04:16" hostname="runnervmlun5p" time="0.181">
+  <properties/>
+  <testcase name="failedCancelledFilteredAndUnknownResponsesDoNotTriggerAutomaticPaidRetry" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.014"/>
+  <testcase name="malformedReviewRetriesReviewOnlyAndKeepsAuthoredQuestions" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.015"/>
+  <testcase name="reducedBatchSurvivesProcessRestart" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.019"/>
+  <testcase name="limitedReviewSplitsSavedDraftWithoutGeneratingItAgain" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.011"/>
+  <testcase name="repeatedTokenLimitStopsAtOneQuestionAndNeverAcceptsPartialJson" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.003"/>
+  <testcase name="rejectionEvidenceSurvivesLaterSuccessfulReplacement" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.004"/>
+  <testcase name="legacyStoppedPreparationStartsWithSmallerGroup" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.011"/>
+  <testcase name="existingPendingReviewKeepsItsOriginalShapeUntilItsResultIsRead" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.005"/>
+  <testcase name="invalidReviewCannotPartiallyMutateSavedDraftOrAcceptQuestions" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.004"/>
+  <testcase name="thirtyQuestionsRecoverFromOutputLimitWithoutChangingModelOrTokenCap" classname="cz.ctuprotebe.vyletnikviz.GenerationRecoveryTest" time="0.094"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

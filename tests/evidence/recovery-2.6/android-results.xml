@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="cz.ctuprotebe.vyletnikviz.FullGameTest" tests="17" failures="0" errors="0" skipped="0" time="34.219" timestamp="2026-09-13T06:06:12" hostname="localhost">
+  <properties>
+    <property name="device" value="emulator-5554 - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="fullFortyQuestionGameCreatesWinnerChronicleAndLeaderboard" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="2.17" />
+  <testcase name="wrongAnswerBlocksChoiceUndoRedoRestoresScoresAndState" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="1.259" />
+  <testcase name="actualImageUriRendersAndSurvivesChronicleStorage" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="1.141" />
+  <testcase name="localTestCredentialIsEncryptedAndCanBeRemoved" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="1.484" />
+  <testcase name="allFiveTakeoverValuesAndOwnerRotationWork" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="1.706" />
+  <testcase name="savedGameSurvivesActivityRecreationAndKeepsCurrentResponder" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="1.118" />
+  <testcase name="generationContextPreservesPhotosModesAndNames" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="1.371" />
+  <testcase name="sharingLaunchesChooserWithoutSendingAMessage" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="1.279" />
+  <testcase name="importRejectsBrokenRecordAndDeduplicatesSharedTrip" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="4.488" />
+  <testcase name="repeatedAnswersAndRepeatedFinishNeverDuplicatePointsOrHistory" classname="cz.ctuprotebe.vyletnikviz.FullGameTest" time="1.315" />
+  <testcase name="incompleteResponseDialogExplainsApiLimitWithoutClaimingBadFacts" classname="cz.ctuprotebe.vyletnikviz.MainActivityTest" time="1.549" />
+  <testcase name="offlineGamePassUndoRedoAndRevealWork" classname="cz.ctuprotebe.vyletnikviz.MainActivityTest" time="4.622" />
+  <testcase name="personalTopicsAndDifficultyStayWithEachOfFivePlayers" classname="cz.ctuprotebe.vyletnikviz.MainActivityTest" time="1.465" />
+  <testcase name="photoButtonRequestsAndroidDocumentPicker" classname="cz.ctuprotebe.vyletnikviz.MainActivityTest" time="2.003" />
+  <testcase name="questionSourcesSurviveSavedGameAndAppearOnlyAfterReveal" classname="cz.ctuprotebe.vyletnikviz.MainActivityTest" time="1.277" />
+  <testcase name="homeSetupAndFivePlayersAreReachable" classname="cz.ctuprotebe.vyletnikviz.MainActivityTest" time="2.611" />
+  <testcase name="chronicleAndAiSettingsOpenWithoutData" classname="cz.ctuprotebe.vyletnikviz.MainActivityTest" time="2.003" />
+</testsuite>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cz.ctuprotebe.vyletnikviz.OpenAiTransportTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-13T06:04:17" hostname="runnervmlun5p" time="0.016">
+  <properties/>
+  <testcase name="pollingNetworkFailureDoesNotRepeatPostAfterRestart" classname="cz.ctuprotebe.vyletnikviz.OpenAiTransportTest" time="0.004"/>
+  <testcase name="authFailureIsNotRetriedOrTreatedAsBadQuiz" classname="cz.ctuprotebe.vyletnikviz.OpenAiTransportTest" time="0.001"/>
+  <testcase name="ambiguousPostTimeoutIsNeverAutomaticallyReplayed" classname="cz.ctuprotebe.vyletnikviz.OpenAiTransportTest" time="0.001"/>
+  <testcase name="dnsFailureGetsTwoBoundedRetriesAndCorrectMessage" classname="cz.ctuprotebe.vyletnikviz.OpenAiTransportTest" time="0.001"/>
+  <testcase name="reportsActualServerProgressAndPreservesTerminalReasonForGenerator" classname="cz.ctuprotebe.vyletnikviz.OpenAiTransportTest" time="0.004"/>
+  <testcase name="pausePreventsAnyFurtherRequests" classname="cz.ctuprotebe.vyletnikviz.OpenAiTransportTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

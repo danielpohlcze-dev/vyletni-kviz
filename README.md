@@ -1,5 +1,17 @@
 # Výletní kvíz
 
+[Stáhnout Výletní kvíz 2.6.0 pro Android](https://github.com/danielpohlcze-dev/vyletni-kviz/raw/refs/heads/main/releases/VyletniKviz-2.6.0.apk) · [Výsledky testů a omezení](tests/evidence/recovery-2.6/REPORT.md)
+
+## Oprava přípravy kvízu ve verzi 2.6
+
+Původní dialog nerozlišoval `incomplete`, `failed` ani `cancelled`; snímek obrazovky proto sám neprokazuje příčinu. Nová verze rozlišuje bezpečný stav a důvod ukončení. Při `incomplete_details.reason=max_output_tokens` zmenší skupinu z pěti na dvě a následně na jednu otázku. Nemění model Sol/high, tokenový limit ani kontrolu zdrojů. Uložený návrh při neúplné kontrole zachová a kontroluje po částech. Po neúspěchu i s jednou otázkou se zastaví. Ostatní terminální chyby nevyvolají automatické placené opakování.
+
+Na obrazovce se rozlišují schválené otázky, hotový návrh a skutečný stav serverové úlohy. Checkpoint obsahuje posledních 100 diagnostických událostí bez klíčů a syrových chybových odpovědí. Při nejasném POST timeoutu se zachovává ochrana proti automatickému opakování.
+
+Podklady: [OpenAI — limit délky a reasoning](https://developers.openai.com/api/docs/guides/reasoning), [background režim](https://developers.openai.com/api/docs/guides/background).
+
+Historická verze 2.5 dokončila sadu 10/10 po dvou omezených placených bězích; první skončil na testovacím limitu, druhý navázal z checkpointu. Výsledek, spotřeba a kontrola všech zdrojů jsou v [zprávě s důkazy](tests/evidence/live-2026-09-12/REPORT.md). Oba povolené dodatečné placené běhy jsou využité a automatizace vypnutá. Nová oprava 2.6 nebyla znovu testována proti placenému API. Její simulace 30 otázek není živým testem na telefonu.
+
 Android aplikace pro 2–5 pojmenovaných hráčů u jednoho telefonu. Pevné pořadí, přebírání otázek, body, kronika výletů a fotografie. Připravená hra funguje offline.
 
 Při „Neví“ se náhodně vyřadí chybná možnost, dokud zbývají alespoň dvě. Další hráči mohou otázku převzít za nižší bodovou hodnotu; správná možnost se nikdy automaticky nevyřazuje. Opakované zpracování stejné odpovědi ani výsledků nesmí připsat body nebo historii dvakrát. Import kontroluje strukturu záznamu a stejný identifikátor výletu znovu nezapočítává.
