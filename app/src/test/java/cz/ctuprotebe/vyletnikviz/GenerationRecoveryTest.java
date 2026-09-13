@@ -114,7 +114,7 @@ public class GenerationRecoveryTest {
             return response("reviews",new JSONArray().put(review(1,true)).put(review(1,true)));
         },()->{},t->{}).run());
         assertEquals(0,j.getJSONArray("accepted").length());
-        assertTrue(j.getJSONObject("draft").getJSONArray("questions").getJSONObject(0).similar(question(1)));
+        assertEquals(question(1).toString(),j.getJSONObject("draft").getJSONArray("questions").getJSONObject(0).toString());
     }
     @Test public void rejectionEvidenceSurvivesLaterSuccessfulReplacement() throws Exception {
         JSONObject j=journal(1);AtomicInteger reviews=new AtomicInteger();
