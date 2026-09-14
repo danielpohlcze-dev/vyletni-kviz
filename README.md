@@ -12,6 +12,8 @@ Na obrazovce se rozlišují schválené otázky, hotový návrh a skutečný sta
 
 Podklady: [OpenAI — limit délky a reasoning](https://developers.openai.com/api/docs/guides/reasoning), [background režim](https://developers.openai.com/api/docs/guides/background).
 
+**Aktuální online kontrola 14. 9. 2026:** API nyní vrací `credit_balance_exhausted`; generování nezačalo a nebyly spotřebovány žádné tokeny. [Přesný výsledek a běhy](tests/evidence/live-2026-09-14/REPORT.md).
+
 Historická verze 2.5 dokončila sadu 10/10 po dvou omezených placených bězích; první skončil na testovacím limitu, druhý navázal z checkpointu. Výsledek, spotřeba a kontrola všech zdrojů jsou v [zprávě s důkazy](tests/evidence/live-2026-09-12/REPORT.md). Oba povolené dodatečné placené běhy jsou využité a automatizace vypnutá. Nová oprava 2.6 nebyla znovu testována proti placenému API. Její simulace 30 otázek není živým testem na telefonu.
 
 Android aplikace pro 2–5 pojmenovaných hráčů u jednoho telefonu. Pevné pořadí, přebírání otázek, body, kronika výletů a fotografie. Připravená hra funguje offline.

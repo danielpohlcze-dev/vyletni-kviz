@@ -1,0 +1,44 @@
+[
+  {
+    "phase": "review",
+    "reason": "unknown",
+    "slots": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "at": 1789389809744,
+    "kind": "response",
+    "status": "failed"
+  },
+  {
+    "phase": "review",
+    "reason": "unknown",
+    "slots": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "at": 1789389967856,
+    "kind": "response",
+    "status": "failed"
+  },
+  {
+    "phase": "author",
+    "reason": "credit_balance_exhausted",
+    "slots": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "at": 1789390550332,
+    "kind": "response",
+    "status": "failed"
+  }
+]
