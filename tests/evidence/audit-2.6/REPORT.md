@@ -24,7 +24,7 @@ Běžné CI bylo při tomto auditu znovu spuštěno: [běh 34812320251](https://
 
 ## Nový test distribuované APK
 
-Test instaluje přesné podepsané APK a ovládá ho přes skutečné dotyky na Androidu 16/API 36. Nemá API klíč; mobilní data a Wi-Fi jsou vypnuté. Plánovaný scénář zahrnuje pět jmen, třicet offline otázek, přebírání, zpět/vpřed, ukončení procesu a navázání, výsledky a kroniku a opětovnou instalaci se zachováním dat.
+Test instaluje přesné podepsané APK a ovládá ho přes skutečné dotyky na Androidu 16/API 36. Nemá API klíč; mobilní data a Wi-Fi jsou vypnuté. Scénář zahrnuje pět jmen, třicet offline otázek, přebírání, zpět/vpřed, ukončení procesu a navázání, výsledky a kroniku a opětovnou instalaci se zachováním dat.
 
 První běh [34812320350](https://github.com/danielpohlcze-dev/vyletni-kviz/actions/runs/34812320350) APK nainstaloval, ale před první herní kontrolou nezískal UI hierarchii. Uložil snímek plochy emulátoru; tento běh selhal a neověřil herní scénář.
 
@@ -32,7 +32,13 @@ Druhý běh [34812543776](https://github.com/danielpohlcze-dev/vyletni-kviz/acti
 
 Třetí běh [34812884352](https://github.com/danielpohlcze-dev/vyletni-kviz/actions/runs/34812884352) prošel přidáním všech pěti jmen, volbou 30 otázek a otevřením offline potvrzení. Zastavil se na rozdílu v automatickém rozpoznávání tlačítka: Android 16 je vykresluje jako „HRÁT VŠEOBECNÝ KVÍZ“. Navigační záznam dokládá přítomnost tohoto tlačítka. Upraven byl pouze matcher tlačítek v testu, nikoli aplikace nebo očekávané výsledky hry.
 
-Úspěch či neúspěch celého třicetiotázkového scénáře je nutné číst z konečného výsledku, ne z jednotlivých předchozích dílčích kroků. Během auditu se spustily pouze neplacené testy; produkční API klíč nebyl čten ani použit.
+Čtvrtý běh [34813188409](https://github.com/danielpohlcze-dev/vyletni-kviz/actions/runs/34813188409) **prošel**, artefakt byl dokončen 14. 9. 2026 v 06:31 UTC. Stažený `summary.json` potvrzuje 112 úspěšných kontrol, Android API 36, shodný SHA-256 distribuované APK a nula API volání. Test skutečně odehrál všech 30 offline otázek pro pět zadaných jmen přes UI, ověřil střídání hráčů, převzetí první otázky za 0,6 bodu, zpět/vpřed, uložení a návrat po ukončení procesu, konečný výsledek, kroniku a dlouhodobou tabulku. Stejnou podepsanou APK znovu nainstaloval pomocí `adb install -r` a výlet zůstal v kronice. To není zkouška migrace ze staršího balíčku 2.5.
+
+Snímek výsledků i XML potvrzují Kaja 6,6 bodu, Barca/Honza/Petr po 6 bodech a Dan 5 bodů. Záznam v kronice má název Audit-Okor a vítěze Kaja. V `final-attempt/` jsou trvale uloženy souhrn a dvě UI hierarchie; plný artefakt běhu navíc obsahuje sedm snímků obrazovek.
+
+Ruční prohlídka výsledného snímku tabulky odhalila další nejasnost: Dan má 100% úspěšnost, i když první otázku předal. Metoda `stats()` počítá pouze correct/(correct+wrong), nikoli předání přes „Neví“. Také řadí pouze podle počtu výher: hráči s nulou výher mají pořadové pozice, přestože jejich body jsou různé (Dan s 5 je před hráči se 6). Matematika odpovídá implementaci, ale aplikace definici ukazatele a pravidlo shody nevysvětluje. Vhodná oprava je jasně vymezit úspěšnost a shody v pořadí, případně přidat body jako druhé řadicí kritérium.
+
+Úspěšný offline scénář neověřuje živé generování 30 AI otázek, fyzický Samsung, fotoaparát ani kompletní přenos fotek a rozehrané hry mezi telefony. Tři předchozí neúspěšné běhy zůstávají v auditu uvedené; zelený výsledek čtvrtého běhu jejich průběh nemění. Během auditu se spustily pouze neplacené testy; produkční API klíč nebyl čten ani použit.
 
 ## Namátková obsahová kontrola
 
