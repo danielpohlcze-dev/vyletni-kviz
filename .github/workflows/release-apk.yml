@@ -1,0 +1,33 @@
+name: Ověřit distribuované APK na Androidu 16
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['tests/release-apk-smoke.py', '.github/workflows/release-apk.yml']
+permissions:
+  contents: read
+jobs:
+  installed-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Povolit akceleraci emulátoru
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Nainstalovat skutečné APK a odehrát 30 otázek klepáním
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: python3 tests/release-apk-smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: installed-release-results
+          path: release-test-results/
+          retention-days: 30
