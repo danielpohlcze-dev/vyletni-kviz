@@ -1,5 +1,7 @@
 # Výletní kvíz
 
+**Stav po auditu 14. 9. 2026:** aplikace zatím nesplňuje celé původní zadání. Známé mezery zahrnují nastavení offline okruhů/obtížnosti, férové rozdělení bizarních otázek, přenos fotek a rozehrané hry mezi telefony a požadovanou serverovou architekturu AI. [Konkrétní zjištění a nové testy distribuované APK](tests/evidence/audit-2.6/REPORT.md).
+
 [Stáhnout Výletní kvíz 2.6.0 pro Android](https://github.com/danielpohlcze-dev/vyletni-kviz/raw/refs/heads/main/releases/VyletniKviz-2.6.0.apk) · [Výsledky testů a omezení](tests/evidence/recovery-2.6/REPORT.md)
 
 ## Oprava přípravy kvízu ve verzi 2.6

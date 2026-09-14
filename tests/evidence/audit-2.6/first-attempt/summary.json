@@ -1,0 +1,10 @@
+{
+  "apk_sha256": "e5e5e054b202ec892974c99bbcbf219b6404eb6a7abc6b5145036005c2f2b1b5",
+  "api_calls": 0,
+  "scenario": "Signed APK, 5 named players, 30 offline questions, UI taps",
+  "checks": [],
+  "android_api": "36",
+  "passed": false,
+  "error": "adb command failed: shell cat /sdcard/quiz-ui.xml cat: /sdcard/quiz-ui.xml: No such file or directory\n",
+  "checks_passed": 0
+}

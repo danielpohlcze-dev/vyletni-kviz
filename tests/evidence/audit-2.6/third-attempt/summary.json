@@ -1,0 +1,16 @@
+{
+  "apk_sha256": "e5e5e054b202ec892974c99bbcbf219b6404eb6a7abc6b5145036005c2f2b1b5",
+  "api_calls": 0,
+  "scenario": "Signed APK, 5 named players, 30 offline questions, UI taps",
+  "checks": [
+    "VÝLETNÍ KVÍZ",
+    "OpenAI klíč zatím není uložený",
+    "NOVÝ VÝLET",
+    "NOVÝ VÝLET",
+    "Offline kvíz"
+  ],
+  "android_api": "36",
+  "passed": false,
+  "error": "UI text not found: Hrát všeobecný kvíz; visible: ['NOVÝ VÝLET', 'Nejdřív vzpomínka, potom hráči a pravidla.', 'Výlet', 'Audit-Okor', '14. 09. 2026', 'Poznámka nebo hláška z výletu', 'Fotky na památku', '＋ Přidat fotky (max. 5)', 'Hráči v pořadí', 'Dan', 'Psychologie', 'Odebrat hráče', 'Kaja', 'Lední hokej', 'Odebrat hráče', 'Barca', 'Silný okruh, například lední hokej', 'Odebrat hráče', 'Honza', 'Silný okruh, například lední hokej', 'Odebrat hráče']",
+  "checks_passed": 5
+}
