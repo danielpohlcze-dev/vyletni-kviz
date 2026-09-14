@@ -74,6 +74,15 @@ public class GenerationRecoveryTest {
             calls.incrementAndGet();return limited().put("incomplete_details",new JSONObject().put("reason","content_filter"));
         },()->{},t->{}).run());assertEquals(1,calls.get());
     }
+
+    @Test public void failedResponseKeepsOnlySafeMachineCode() throws Exception {
+        JSONObject raw=new JSONObject().put("status","failed").put("error",new JSONObject()
+                .put("code","server_error").put("message","PRIVATE_UPSTREAM_DETAIL"));
+        assertEquals("server_error",QuizGeneration.safeReason(raw));
+        raw.getJSONObject("error").put("code","unsafe code with spaces");
+        assertEquals("unknown",QuizGeneration.safeReason(raw));
+        assertFalse(QuizGeneration.safeReason(raw).contains("PRIVATE_UPSTREAM_DETAIL"));
+    }
     @Test public void malformedReviewRetriesReviewOnlyAndKeepsAuthoredQuestions() throws Exception {
         JSONObject j=journal(2);AtomicInteger authors=new AtomicInteger(),reviews=new AtomicInteger();
         JSONObject done=new QuizGeneration(j,b->{

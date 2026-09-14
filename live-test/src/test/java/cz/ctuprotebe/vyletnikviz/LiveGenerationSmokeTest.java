@@ -29,4 +29,12 @@ public class LiveGenerationSmokeTest {
         JSONObject result=LiveGenerationSmoke.safeFailure(new java.io.IOException(sentinel));
         assertFalse(result.toString().contains(sentinel));assertFalse(result.getBoolean("passed"));
     }
+    @Test public void reportIncludesOnlySanitizedTerminalResponseState()throws Exception {
+        String sentinel="fake-secret-sentinel";
+        JSONObject result=LiveGenerationSmoke.safeFailure(
+                new QuizGeneration.ResponseException("failed","server_error"));
+        assertEquals("failed",result.getString("response_status"));
+        assertEquals("server_error",result.getString("response_reason"));
+        assertFalse(result.toString().contains(sentinel));
+    }
 }

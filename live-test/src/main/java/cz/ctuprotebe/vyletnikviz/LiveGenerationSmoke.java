@@ -39,6 +39,10 @@ public final class LiveGenerationSmoke {
     static JSONObject safeFailure(Exception e) throws JSONException {
         JSONObject result=new JSONObject().put("passed",false).put("failure_type",e.getClass().getSimpleName());
         if(e instanceof OpenAiTransport.ApiException)result.put("http_status",((OpenAiTransport.ApiException)e).status);
+        if(e instanceof QuizGeneration.ResponseException) {
+            QuizGeneration.ResponseException response=(QuizGeneration.ResponseException)e;
+            result.put("response_status",response.status).put("response_reason",response.reason);
+        }
         // Deliberately omit arbitrary error messages, stack traces, request bodies and credentials.
         return result;
     }

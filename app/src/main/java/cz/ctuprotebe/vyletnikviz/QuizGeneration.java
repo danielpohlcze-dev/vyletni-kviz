@@ -43,7 +43,12 @@ final class QuizGeneration {
     static String safeReason(JSONObject raw) {
         JSONObject details = raw.optJSONObject("incomplete_details");
         String reason = details == null ? "" : details.optString("reason");
-        return Arrays.asList("max_output_tokens", "content_filter").contains(reason) ? reason : "unknown";
+        if (Arrays.asList("max_output_tokens", "content_filter").contains(reason)) return reason;
+        // A terminal failed response can carry a short machine-readable code in error.code.
+        // Keep only a harmless identifier; never persist the arbitrary upstream message.
+        JSONObject error = raw.optJSONObject("error");
+        String code = error == null ? "" : error.optString("code");
+        return code.matches("[A-Za-z0-9_.-]{1,80}") ? code : "unknown";
     }
 
     private final JSONObject journal;
