@@ -39,7 +39,8 @@ def coords(n):
     return (x1+x2)//2, (y1+y2)//2
 
 def swipe(down):
-    shell("input", "swipe", "500", "1750" if down else "500", "500", "500" if down else "1750", "160")
+    # Swipe inside the ScrollView padding, outside editable fields and their touch handling.
+    shell("input", "swipe", "12", "1950" if down else "600", "12", "600" if down else "1950", "400")
 
 def seek(text, exact=False, scroll=True, cls=None):
     def match(n):
@@ -54,6 +55,9 @@ def seek(text, exact=False, scroll=True, cls=None):
             hits = [n for n in nodes if match(n)]
             if hits:
                 return hits[0]
+            with (OUT/"navigation.jsonl").open("a") as log:
+                log.write(json.dumps({"wanted":text,"direction":direction,"attempt":attempt,
+                    "texts":[n.get("text") for n in nodes if n.get("text")]},ensure_ascii=False)+"\n")
             signature = [(n.get("text"),n.get("bounds")) for n in nodes]
             if signature == previous:
                 break
