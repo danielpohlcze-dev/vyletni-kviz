@@ -45,7 +45,10 @@ def swipe(down):
 def seek(text, exact=False, scroll=True, cls=None):
     def match(n):
         t = n.get("text", "")
-        return (t == text if exact else text in t) and n.get("enabled") == "true" and (cls is None or n.get("class") == cls)
+        wanted = text
+        if n.get("class") == "android.widget.Button":
+            t, wanted = t.casefold(), wanted.casefold()  # Android 16 dialog buttons render ALL CAPS
+        return (t == wanted if exact else wanted in t) and n.get("enabled") == "true" and (cls is None or n.get("class") == cls)
     for direction in ([None, True, False] if scroll else [None]):
         previous = None
         for attempt in range(1 if direction is None else 20):
