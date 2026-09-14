@@ -1,5 +1,5 @@
-Authorized bounded follow-up 2 (final paid follow-up)
-Resume exact checkpoint from run 34720470223 / artifact 10306089515.
-resume.json SHA256: 9e7cb69dcdb8e171be3730f7e400061809b566e3511b34cea8b92949fe8826a5
-Preserve 5 accepted questions and review the saved draft for slots 6-10.
-Maximum 4 generation POSTs; unchanged model and quality policy.
+Authorized bounded online AI verification on 2026-09-14 by Daniel.
+Resume repository checkpoint with 5 accepted questions and 5 saved draft questions.
+resume.json SHA256: c709492013cf910662e9ebc4d6a697eaef8a80ae0eb0c684fca3f32289c96fe3
+Use unchanged gpt-5.6-sol/high quality policy, max 4 POST attempts, max 8 web tool calls per request.
+Do not expose or copy OPENAI_API_KEY.
