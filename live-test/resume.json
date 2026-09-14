@@ -282,5 +282,19 @@
       "slot": 10,
       "hard": false
     }
-  ]
+  ],
+  "events": [{
+    "phase": "review",
+    "reason": "unknown",
+    "slots": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "at": 1789389809744,
+    "kind": "response",
+    "status": "failed"
+  }]
 }

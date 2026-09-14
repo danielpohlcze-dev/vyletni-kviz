@@ -1,5 +1,5 @@
-Authorized bounded online AI verification on 2026-09-14 by Daniel.
-Resume repository checkpoint with 5 accepted questions and 5 saved draft questions.
-resume.json SHA256: c709492013cf910662e9ebc4d6a697eaef8a80ae0eb0c684fca3f32289c96fe3
-Use unchanged gpt-5.6-sol/high quality policy, max 4 POST attempts, max 8 web tool calls per request.
-Do not expose or copy OPENAI_API_KEY.
+Authorized single retry after terminal response status failed/unknown in run 34844936211.
+Resume exact artifact checkpoint; 5 accepted questions and 5 saved draft questions.
+resume.json SHA256: bbd4af3ba2c3c573bd5d45de00a22b371365d67be1d71d2e6df3ea267b5f79b8
+Use unchanged gpt-5.6-sol/high policy, max 4 POST attempts and max 8 web tool calls per request.
+No blind timeout retry; never expose OPENAI_API_KEY.
