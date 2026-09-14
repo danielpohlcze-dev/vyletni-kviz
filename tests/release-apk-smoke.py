@@ -22,13 +22,13 @@ def shell(*args):
     return adb("shell", *args)
 
 def tree():
-    for attempt in range(4):
-        shell("uiautomator", "dump", "/sdcard/quiz-ui.xml")
-        xml = shell("cat", "/sdcard/quiz-ui.xml")
+    for attempt in range(6):
         try:
+            message = shell("uiautomator", "dump", "/sdcard/quiz-ui.xml")
+            xml = shell("cat", "/sdcard/quiz-ui.xml")
             return ET.fromstring(xml[xml.index("<?xml"):])
-        except (ET.ParseError, ValueError):
-            time.sleep(.3)
+        except (ET.ParseError, ValueError, RuntimeError):
+            time.sleep(1)
     raise RuntimeError("No readable UI hierarchy")
 
 def texts():
@@ -82,7 +82,11 @@ def shot(name):
     ET.ElementTree(tree()).write(OUT/(name+".xml"), encoding="utf-8")
 
 def launch():
-    shell("am", "start", "-W", "-n", ACTIVITY)
+    message = shell("am", "start", "-W", "-n", ACTIVITY)
+    print("Activity launch:", message, flush=True)
+    if "Error" in message:
+        raise RuntimeError(message)
+    time.sleep(1)
 
 try:
     assert result["apk_sha256"] == "e5e5e054b202ec892974c99bbcbf219b6404eb6a7abc6b5145036005c2f2b1b5"
@@ -177,6 +181,11 @@ except Exception as e:
     traceback.print_exc()
     try: shot("failure")
     except Exception: pass
+    for name, args in [("crashes", ("logcat", "-d", "-b", "crash")),
+                       ("activities", ("dumpsys", "activity", "activities")),
+                       ("package", ("dumpsys", "package", APP))]:
+        try: (OUT/(name+".txt")).write_text(shell(*args))
+        except Exception: pass
 finally:
     result["checks_passed"] = len(result["checks"])
     (OUT/"summary.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
