@@ -89,11 +89,29 @@ def shot(name):
     ET.ElementTree(tree()).write(OUT/(name+".xml"), encoding="utf-8")
 
 def launch():
-    message = shell("am", "start", "-W", "-n", ACTIVITY)
-    print("Activity launch:", message, flush=True)
-    if "Error" in message:
-        raise RuntimeError(message)
-    time.sleep(1)
+    for attempt in range(8):
+        message = shell("am", "start", "-W", "-n", ACTIVITY)
+        print("Activity launch:", message, flush=True)
+        if "Error" in message:
+            raise RuntimeError(message)
+        time.sleep(1)
+        visible = texts()
+        if any("VÝLETNÍ KVÍZ" in value for value in visible):
+            return
+        # Fresh API-36 emulator images sometimes leave the notification shade or a
+        # launcher ANR over the foreground Activity. Dismiss only the system UI and
+        # bring the already installed app forward again; app state is untouched.
+        if "Wait" in visible:
+            try:
+                n = seek("Wait", exact=True, scroll=False)
+                x, y = coords(n)
+                shell("input", "tap", str(x), str(y))
+            except AssertionError:
+                shell("input", "keyevent", "4")
+        else:
+            shell("input", "keyevent", "4")
+        time.sleep(1)
+    raise AssertionError("App stayed hidden by system UI: " + repr(texts())[:1600])
 
 try:
     assert result["apk_sha256"] == "453176e1de93e3c8304712c73a46352869ac1f1c15c303af776fcc3329733f44"
