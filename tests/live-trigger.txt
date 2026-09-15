@@ -1,6 +1,6 @@
-Authorized final diagnostic online AI run after two terminal review failures.
-Preserve 5 accepted questions. Intentionally discard the old saved draft and generate fresh slots 6-10 to isolate author versus reviewer behavior.
-resume.json SHA256: ffad444b241090bddc9d6517cac7e859daea0f7b8f9573d171cef5aec5fd2d88
-Diagnostics commit: e9e53a5c292fa1a6160ffc31736c0e624f35c2b2
+Authorized bounded online verification after Daniel replenished API credits on 2026-09-15.
+Resume exact checkpoint from run 34846103265 / artifact 10348340381.
+Preserve 5 accepted questions; generate only fresh slots 6-10.
+resume.json SHA256: 1f1c0c672fe6e10d55515c5f01bfbaf77f5dd765c67251bbaaf35c6a56f1c60f
 Use unchanged gpt-5.6-sol/high policy, max 4 POST attempts and max 8 web tool calls per request.
 Never expose OPENAI_API_KEY.

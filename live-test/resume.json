@@ -5,13 +5,11 @@
       "requested_topic": "Česko: historie",
       "checked_at": "2026-09-12",
       "question": "Který český král vydal 7. dubna 1348 zakládací listinu pražského obecného učení, dnešní Univerzity Karlovy?",
-      "sources": [
-        {
-          "title": "Zakládací listina – Univerzita Karlova",
-          "support": "Zakládací listina uvádí datum 7. dubna 1348, označuje Karla za římského a českého krále a zřizuje obecné učení v Praze včetně panovnické ochrany jeho členů.",
-          "url": "https://cuni.cz/UK-1391.html"
-        }
-      ],
+      "sources": [{
+        "title": "Zakládací listina \u2013 Univerzita Karlova",
+        "support": "Zakládací listina uvádí datum 7. dubna 1348, označuje Karla za římského a českého krále a zřizuje obecné učení v Praze včetně panovnické ochrany jeho členů.",
+        "url": "https://cuni.cz/UK-1391.html"
+      }],
       "correct": 2,
       "review_note": "Správně je Karel IV. Otázka je jednoznačná, odpovídá českým dějinám a pro základní obtížnost je přiměřená; vysvětlení je celé doloženo.",
       "assigned_player": "Barča",
@@ -30,13 +28,11 @@
       "requested_topic": "Svět: příroda",
       "checked_at": "2026-09-12",
       "question": "Který z těchto tučňáků je největším žijícím druhem?",
-      "sources": [
-        {
-          "title": "Emperor penguin – Australian Antarctic Program",
-          "support": "Australský antarktický program označuje tučňáka císařského za největší z 18 druhů tučňáků a uvádí hmotnost dospělců až 40 kilogramů na začátku období rozmnožování.",
-          "url": "https://www.antarctica.gov.au/about-antarctica/animals/penguins/emperor-penguin/"
-        }
-      ],
+      "sources": [{
+        "title": "Emperor penguin \u2013 Australian Antarctic Program",
+        "support": "Australský antarktický program označuje tučňáka císařského za největší z 18 druhů tučňáků a uvádí hmotnost dospělců až 40 kilogramů na začátku období rozmnožování.",
+        "url": "https://www.antarctica.gov.au/about-antarctica/animals/penguins/emperor-penguin/"
+      }],
       "correct": 0,
       "review_note": "Správně je tučňák císařský. Všechny možnosti jsou druhy tučňáků, ale pouze císařský je největší; otázka je vhodná pro lehčí přírodovědný slot.",
       "assigned_player": "Dominik",
@@ -55,13 +51,11 @@
       "requested_topic": "Věda a technika",
       "checked_at": "2026-09-12",
       "question": "Na hyperjemném přechodu v základním stavu kterého izotopu je založena definice sekundy v soustavě SI?",
-      "sources": [
-        {
-          "title": "SI base unit: second – BIPM",
-          "support": "Oficiální definice BIPM váže sekundu na neporušený hyperjemný přechod v základním stavu atomu cesia-133 a stanovuje jeho frekvenci přesně na 9 192 631 770 Hz.",
-          "url": "https://www.bipm.org/en/si-base-units/second"
-        }
-      ],
+      "sources": [{
+        "title": "SI base unit: second \u2013 BIPM",
+        "support": "Oficiální definice BIPM váže sekundu na neporušený hyperjemný přechod v základním stavu atomu cesia-133 a stanovuje jeho frekvenci přesně na 9 192 631 770 Hz.",
+        "url": "https://www.bipm.org/en/si-base-units/second"
+      }],
       "correct": 3,
       "review_note": "Správně je cesium-133. Ostatní izotopy jsou věrohodné fyzikální distraktory, ale oficiální definice SI určuje jedinou odpověď; odbornější znalost odpovídá označení hard=true.",
       "assigned_player": "Daneček",
@@ -80,13 +74,11 @@
       "requested_topic": "Český rap",
       "checked_at": "2026-09-12",
       "question": "Který český rapový projekt vznikl kolem roku 2002 ve složení Kato a DJ Skupla?",
-      "sources": [
-        {
-          "title": "Prago Union – Biografie",
-          "support": "Oficiální biografie uvádí vznik Prago Union někdy v roce 2002 ve složení Kato a DJ Skupla; zároveň potvrzuje Katovy přezdívky Def a Deph i jeho dřívější vedení skupiny Chaozz.",
-          "url": "https://www.pragounion.cz/bio/"
-        }
-      ],
+      "sources": [{
+        "title": "Prago Union \u2013 Biografie",
+        "support": "Oficiální biografie uvádí vznik Prago Union někdy v roce 2002 ve složení Kato a DJ Skupla; zároveň potvrzuje Katovy přezdívky Def a Deph i jeho dřívější vedení skupiny Chaozz.",
+        "url": "https://www.pragounion.cz/bio/"
+      }],
       "correct": 1,
       "review_note": "Správně je Prago Union. Otázka se obsahově přesně drží českého rapu, možnosti jsou srovnatelné české rapové projekty a vysvětlení odpovídá oficiální biografii.",
       "assigned_player": "Barča",
@@ -102,18 +94,16 @@
       "explanation": "Prago Union vznikli kolem roku 2002 ve složení Kato a DJ Skupla. Kato, známý také jako Def či Deph, předtím působil jako lídr rapové skupiny Chaozz."
     },
     {
-      "requested_topic": "Slovenské politické události v letech 2020–2024",
+      "requested_topic": "Slovenské politické události v letech 2020\u20132024",
       "checked_at": "2026-09-12",
       "question": "Kterého politika jmenovala prezidentka Zuzana Čaputová 1. dubna 2021 předsedou nové slovenské vlády?",
-      "sources": [
-        {
-          "title": "Prezidentka vymenovala vládu Eduarda Hegera",
-          "support": "Oficiální web slovenské hlavy státu uvádí, že Zuzana Čaputová 1. dubna 2021 jmenovala novou vládu vedenou Eduardem Hegerem a zmiňuje dohodu čtyř koaličních stran o změnách ve vládě.",
-          "url": "https://www.prezident.sk/article/prezidentka-vymenovala-vladu-edurada-hegera/"
-        }
-      ],
+      "sources": [{
+        "title": "Prezidentka vymenovala vládu Eduarda Hegera",
+        "support": "Oficiální web slovenské hlavy státu uvádí, že Zuzana Čaputová 1. dubna 2021 jmenovala novou vládu vedenou Eduardem Hegerem a zmiňuje dohodu čtyř koaličních stran o změnách ve vládě.",
+        "url": "https://www.prezident.sk/article/prezidentka-vymenovala-vladu-edurada-hegera/"
+      }],
       "correct": 2,
-      "review_note": "Správně je Eduard Heger. Konkrétní datum odlišuje jednotlivé slovenské premiéry jednoznačně a událost přesně spadá do požadovaného období 2020–2024.",
+      "review_note": "Správně je Eduard Heger. Konkrétní datum odlišuje jednotlivé slovenské premiéry jednoznačně a událost přesně spadá do požadovaného období 2020\u20132024.",
       "assigned_player": "Dominik",
       "options": [
         "Igor Matovič",
@@ -154,7 +144,7 @@
       "hard": false
     },
     {
-      "requested_topic": "Slovenské politické události v letech 2020–2024",
+      "requested_topic": "Slovenské politické události v letech 2020\u20132024",
       "assigned_player": "Dominik",
       "slot": 5,
       "hard": false
@@ -216,6 +206,20 @@
         10
       ],
       "at": 1789389967856,
+      "kind": "response",
+      "status": "failed"
+    },
+    {
+      "phase": "author",
+      "reason": "credit_balance_exhausted",
+      "slots": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "at": 1789390550332,
       "kind": "response",
       "status": "failed"
     }
