@@ -8,6 +8,10 @@ import java.nio.charset.StandardCharsets;
 /** Saves the response ID before polling, so a lost connection does not submit a second paid job. */
 class OpenAiTransport implements QuizGeneration.Transport {
     static final String ENDPOINT = "https://api.openai.com/v1/responses";
+    // A phone can briefly lose DNS while switching towers, Wi-Fi access points or power modes.
+    // UnknownHost / ConnectException happen before an HTTP response, so retrying them is safe.
+    // SocketTimeoutException is intentionally excluded because a POST may already be accepted.
+    static final long[] CONNECTION_RETRY_DELAYS_MS = {2000, 3000, 5000, 8000, 13000, 21000};
     private final String apiKey;
     private final JSONObject journal;
     private final QuizGeneration.Checkpoint checkpoint;
@@ -45,14 +49,8 @@ class OpenAiTransport implements QuizGeneration.Transport {
         if (pending == null) {
             progress.show("Odesílám novou úlohu…");
             // Retry only failures before any server connection; an ambiguous POST timeout is not replayed.
-            response = null;
-            for (int attempt = 0; response == null; attempt++) {
-                try { response = http("POST", ENDPOINT, body); }
-                catch (UnknownHostException | ConnectException e) {
-                    if (attempt >= 2) throw e;
-                    waitForPoll(1000L * (attempt + 1));
-                }
-            }
+            response = httpWithConnectionRetry("POST", ENDPOINT, body,
+                    "Telefon hledá spojení s OpenAI");
             String id = response.optString("id");
             if (!id.matches("resp_[A-Za-z0-9_-]+")) throw new IOException("Server neposkytl identifikátor přípravy. Zkuste to znovu.");
             pending = new JSONObject().put("id", id).put("phase", phase).put("started_at", System.currentTimeMillis());
@@ -85,13 +83,27 @@ class OpenAiTransport implements QuizGeneration.Transport {
     private JSONObject retrieve(String id) throws Exception {
         if (!id.matches("resp_[A-Za-z0-9_-]+")) throw new IOException("Neplatný identifikátor uložené přípravy.");
         try {
-            return http("GET", ENDPOINT + "/" + id + "?include%5B%5D=web_search_call.action.sources", null);
+            return httpWithConnectionRetry("GET",
+                    ENDPOINT + "/" + id + "?include%5B%5D=web_search_call.action.sources", null,
+                    "Spojení kolísá, bezpečně navazuji na uloženou úlohu");
         } catch (ApiException e) {
             if (e.status == 404) {
                 journal.remove("pending_response"); checkpoint.save();
                 throw new IOException("Server už tuto rozpracovanou odpověď nemá. Hotové otázky zůstaly uložené; pokračování zopakuje jen chybějící část.");
             }
             throw e;
+        }
+    }
+
+    JSONObject httpWithConnectionRetry(String method, String url, JSONObject body, String retryProgress) throws Exception {
+        for (int attempt = 0; ; attempt++) {
+            try { return http(method, url, body); }
+            catch (UnknownHostException | ConnectException e) {
+                if (attempt >= CONNECTION_RETRY_DELAYS_MS.length) throw e;
+                progress.show(retryProgress + " • pokus " + (attempt + 2) + "/" +
+                        (CONNECTION_RETRY_DELAYS_MS.length + 1));
+                waitForPoll(CONNECTION_RETRY_DELAYS_MS[attempt]);
+            }
         }
     }
 

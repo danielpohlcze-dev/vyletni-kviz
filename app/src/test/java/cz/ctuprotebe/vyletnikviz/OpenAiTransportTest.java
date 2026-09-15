@@ -28,8 +28,10 @@ public class OpenAiTransportTest {
                 return QuizGenerationTest.response("questions",new JSONArray().put(QuizGenerationTest.question(1)));
             }
         };
-        second.call(body());assertEquals(Arrays.asList("POST","GET","GET"),calls);
-        second.call(body());assertEquals(3,calls.size()); // persisted completed result is reused too
+        second.call(body());
+        assertEquals(1,calls.stream().filter("POST"::equals).count());
+        assertEquals(8,calls.stream().filter("GET"::equals).count());
+        second.call(body());assertEquals(9,calls.size()); // persisted completed result is reused too
     }
     @Test public void ambiguousPostTimeoutIsNeverAutomaticallyReplayed() throws Exception {
         final int[] calls={0};OpenAiTransport t=new OpenAiTransport("fake-test-key",new JSONObject(),()->{}){
@@ -37,14 +39,31 @@ public class OpenAiTransportTest {
         };
         assertThrows(SocketTimeoutException.class,()->t.call(body()));assertEquals(1,calls[0]);
     }
-    @Test public void dnsFailureGetsTwoBoundedRetriesAndCorrectMessage() throws Exception {
+    @Test public void dnsFailureGetsBoundedRetriesForAboutOneMinuteAndCorrectMessage() throws Exception {
         final int[] calls={0};OpenAiTransport t=new OpenAiTransport("fake-test-key",new JSONObject(),()->{}){
             @Override JSONObject http(String m,String u,JSONObject b)throws Exception{calls[0]++;throw new UnknownHostException();}
             @Override void waitForPoll(long millis){}
         };
-        assertThrows(UnknownHostException.class,()->t.call(body()));assertEquals(3,calls[0]);
+        assertThrows(UnknownHostException.class,()->t.call(body()));
+        assertEquals(OpenAiTransport.CONNECTION_RETRY_DELAYS_MS.length+1,calls[0]);
         assertEquals("Nepodařilo se připojit",OpenAiTransport.errorTitle(new UnknownHostException()));
         assertFalse(OpenAiTransport.errorMessage(new UnknownHostException()).contains("nespolehlivý"));
+    }
+    @Test public void dnsRecoveryWhilePollingKeepsOnePaidPostAndSameResponseId() throws Exception {
+        JSONObject journal=QuizGenerationTest.journal(1);List<String> calls=new ArrayList<>();final int[] failedGets={0};
+        OpenAiTransport t=new OpenAiTransport("fake-test-key",journal,()->{}){
+            @Override JSONObject http(String method,String url,JSONObject body)throws Exception{
+                calls.add(method);
+                if("POST".equals(method))return new JSONObject().put("id","resp_saved").put("status","queued");
+                assertTrue(url.contains("resp_saved"));
+                if(failedGets[0]++<3)throw new UnknownHostException();
+                return QuizGenerationTest.response("questions",new JSONArray().put(QuizGenerationTest.question(1)));
+            }
+            @Override void waitForPoll(long millis){}
+        };
+        t.call(body());
+        assertEquals(1,calls.stream().filter("POST"::equals).count());
+        assertEquals(4,calls.stream().filter("GET"::equals).count());
     }
     @Test public void authFailureIsNotRetriedOrTreatedAsBadQuiz() throws Exception {
         final int[] calls={0};OpenAiTransport t=new OpenAiTransport("fake-test-key",new JSONObject(),()->{}){
