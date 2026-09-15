@@ -9,9 +9,21 @@ public class LiveGenerationSmokeTest {
         original.getJSONArray("accepted").put(new JSONObject().put("slot",1));
         LiveGenerationSmoke.saveCheckpoint(dir,original);
         assertEquals(1,LiveGenerationSmoke.restore(dir.resolve("resume.json")).getJSONArray("accepted").length());
+        assertFalse(new JSONObject(java.nio.file.Files.readString(dir.resolve("accepted-questions.json"))).getBoolean("complete"));
         original.getJSONArray("plan").getJSONObject(0).put("assigned_player","Changed");
         LiveGenerationSmoke.saveCheckpoint(dir,original);
         try{LiveGenerationSmoke.restore(dir.resolve("resume.json"));fail();}catch(java.io.IOException expected){}
+    }
+    @Test public void acceptedQuestionsArtifactIsCompleteExactlyWhenPlanIsComplete()throws Exception {
+        java.nio.file.Path dir=java.nio.file.Files.createTempDirectory("quiz-complete");
+        JSONObject state=LiveGenerationSmoke.journal();
+        JSONArray accepted=state.getJSONArray("accepted");
+        JSONArray plan=state.getJSONArray("plan");
+        for(int i=0;i<plan.length();i++)accepted.put(new JSONObject().put("slot",i+1));
+        LiveGenerationSmoke.saveCheckpoint(dir,state);
+        JSONObject artifact=new JSONObject(java.nio.file.Files.readString(dir.resolve("accepted-questions.json")));
+        assertTrue(artifact.getBoolean("complete"));
+        assertEquals(10,artifact.getJSONArray("questions").length());
     }
     @Test public void fixtureHasTenOrderedSlotsIncludingReportedProblemTopics()throws Exception {
         JSONArray plan=LiveGenerationSmoke.journal().getJSONArray("plan");assertEquals(10,plan.length());

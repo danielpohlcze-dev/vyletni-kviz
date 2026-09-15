@@ -62,8 +62,10 @@ public final class LiveGenerationSmoke {
         // This fixture journal contains questions, web results and response IDs, never credentials.
         Path temp=output.resolve("resume.tmp");Files.writeString(temp,state.toString(2));
         Files.move(temp,output.resolve("resume.json"),StandardCopyOption.REPLACE_EXISTING);
-        Files.writeString(output.resolve("accepted-questions.json"),new JSONObject().put("complete",false)
-                .put("questions",state.getJSONArray("accepted")).toString(2));
+        JSONArray accepted=state.getJSONArray("accepted");
+        boolean complete=accepted.length()==state.getJSONArray("plan").length();
+        Files.writeString(output.resolve("accepted-questions.json"),new JSONObject().put("complete",complete)
+                .put("questions",accepted).toString(2));
     }
 
     public static void main(String[] args) throws Exception {

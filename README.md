@@ -12,9 +12,9 @@ Na obrazovce se rozlišují schválené otázky, hotový návrh a skutečný sta
 
 Podklady: [OpenAI — limit délky a reasoning](https://developers.openai.com/api/docs/guides/reasoning), [background režim](https://developers.openai.com/api/docs/guides/background).
 
-**Aktuální online kontrola 14. 9. 2026:** API nyní vrací `credit_balance_exhausted`; generování nezačalo a nebyly spotřebovány žádné tokeny. [Přesný výsledek a běhy](tests/evidence/live-2026-09-14/REPORT.md).
+**Aktuální online kontrola 15. 9. 2026:** skutečné API dokončilo kontrolovanou sadu 10/10. Test navázal z pěti hotových otázek, bezpečně obnovil simulovaně přerušený polling a k nové pětici použil dva POST požadavky (autor + kontrola). [Otázky, spotřeba, zdroje a omezení závěru](tests/evidence/live-2026-09-15/REPORT.md). Předchozí stav `credit_balance_exhausted` je zachovaný v [historickém záznamu](tests/evidence/live-2026-09-14/REPORT.md).
 
-Historická verze 2.5 dokončila sadu 10/10 po dvou omezených placených bězích; první skončil na testovacím limitu, druhý navázal z checkpointu. Výsledek, spotřeba a kontrola všech zdrojů jsou v [zprávě s důkazy](tests/evidence/live-2026-09-12/REPORT.md). Oba povolené dodatečné placené běhy jsou využité a automatizace vypnutá. Nová oprava 2.6 nebyla znovu testována proti placenému API. Její simulace 30 otázek není živým testem na telefonu.
+Historická verze 2.5 dokončila sadu 10/10 po dvou omezených placených bězích; první skončil na testovacím limitu, druhý navázal z checkpointu. Výsledek, spotřeba a kontrola všech zdrojů jsou v [zprávě s důkazy](tests/evidence/live-2026-09-12/REPORT.md). Produkční generátor a transport verze 2.6 nyní prošly novým placeným testem 10/10; stále však nejde o živý test třiceti otázek přímo na fyzickém telefonu.
 
 Android aplikace pro 2–5 pojmenovaných hráčů u jednoho telefonu. Pevné pořadí, přebírání otázek, body, kronika výletů a fotografie. Připravená hra funguje offline.
 
