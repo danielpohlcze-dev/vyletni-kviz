@@ -1,0 +1,9 @@
+{
+  "apk_sha256": "453176e1de93e3c8304712c73a46352869ac1f1c15c303af776fcc3329733f44",
+  "api_calls": 0,
+  "scenario": "Signed APK, 5 named players, 30 offline questions, UI taps",
+  "android_api": "36",
+  "passed": true,
+  "checks_passed": 112,
+  "run_id": 35015611667
+}
