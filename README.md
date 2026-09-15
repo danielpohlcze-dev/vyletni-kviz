@@ -2,7 +2,7 @@
 
 **Stav po auditu 14. 9. 2026:** aplikace zatím nesplňuje celé původní zadání. Známé mezery zahrnují nastavení offline okruhů/obtížnosti, férové rozdělení bizarních otázek, přenos fotek a rozehrané hry mezi telefony a požadovanou serverovou architekturu AI. [Konkrétní zjištění a nové testy distribuované APK](tests/evidence/audit-2.6/REPORT.md).
 
-[Stáhnout Výletní kvíz 2.6.1 pro Android](https://github.com/danielpohlcze-dev/vyletni-kviz/raw/refs/heads/main/releases/VyletniKviz-2.6.1.apk) · [Finální test přesně distribuovaného APK](tests/evidence/release-2.6.1/REPORT.md)
+[Stáhnout Výletní kvíz 2.6.2 pro Android](https://github.com/danielpohlcze-dev/vyletni-kviz/raw/refs/heads/main/releases/VyletniKviz-2.6.2.apk) · [Finální test přesně distribuovaného APK](tests/evidence/release-2.6.2/REPORT.md)
 
 ## Oprava přípravy kvízu ve verzi 2.6
 
@@ -36,7 +36,7 @@ Vyhledaný odkaz a souhlas dvou modelových průchodů nejsou důkaz absolutní 
 
 `QuizGeneration` obsahuje pravidla tvorby a validace, `OpenAiTransport` síť a obnovu Responses úloh, `MainActivity` obrazovky a ukládání. Příprava má samostatný záznam `ai_pending`, oddělený od rozehrané hry a historie. Ukládá kontext výletu, pevný plán, přijaté otázky, čekající návrh a ID odeslané úlohy. Při návratu se nejdříve načte existující odpověď přes GET, nikoli další POST.
 
-DNS chyby mají nejvýše dva automatické opakované pokusy. Nejasný timeout odeslaného POST se automaticky neopakuje, protože mohl být již účtován. Pokud se ID odpovědi nestihlo vrátit a uložit, přesné obnovení této jediné úlohy není možné. Pozastavení zastaví další práci telefonu; již odeslaná serverová úloha může doběhnout. `background: true, store: true` umožňuje později načíst výsledek podle retenčních pravidel OpenAI.
+Krátkodobé DNS a spojovací chyby se u prvního odeslání i následného načítání bezpečně opakují po dobu přibližně jedné minuty. Po přijetí úlohy se vždy používá stejné uložené ID, takže kolísání sítě nevytvoří duplicitní placený požadavek. Nejasný timeout odeslaného POST se automaticky neopakuje, protože mohl být již účtován. Pokud se ID odpovědi nestihlo vrátit a uložit, přesné obnovení této jediné úlohy není možné. Pozastavení zastaví další práci telefonu; již odeslaná serverová úloha může doběhnout. `background: true, store: true` umožňuje později načíst výsledek podle retenčních pravidel OpenAI.
 
 API klíč uživatel zadává v telefonu; je zašifrovaný Android Keystore a nevkládá se do repozitáře ani testů. Aktuální osobní APK volá OpenAI přímo. Nový postup je dražší než původní rychlé generování; nemá automatický přechod na levnější model.
 
