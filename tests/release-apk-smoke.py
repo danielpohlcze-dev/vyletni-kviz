@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 APP = "cz.ctuprotebe.vyletnikviz.quality26"
 ACTIVITY = APP + "/cz.ctuprotebe.vyletnikviz.MainActivity"
-APK = Path("releases/VyletniKviz-2.6.0.apk")
+APK = Path("releases/VyletniKviz-2.6.1.apk")
 OUT = Path("release-test-results")
 OUT.mkdir(exist_ok=True)
 result = {"apk_sha256": hashlib.sha256(APK.read_bytes()).hexdigest(), "api_calls": 0,
@@ -96,7 +96,7 @@ def launch():
     time.sleep(1)
 
 try:
-    assert result["apk_sha256"] == "e5e5e054b202ec892974c99bbcbf219b6404eb6a7abc6b5145036005c2f2b1b5"
+    assert result["apk_sha256"] == "d585b46fd1f49de4f482427f237fa7144e593a3786eafb63270f76b7879f8034"
     result["android_api"] = shell("getprop", "ro.build.version.sdk").strip()
     adb("install", str(APK))
     shell("svc", "wifi", "disable")
