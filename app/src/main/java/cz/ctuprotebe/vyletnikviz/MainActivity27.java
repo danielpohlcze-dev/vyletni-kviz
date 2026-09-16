@@ -11,7 +11,7 @@ import java.util.*;
 
 /**
  * Version 2.7 keeps the complete multiplayer UI/game engine from MainActivity,
- * but replaces the expensive direct-phone OpenAI pipeline with one server job.
+ * but moves generation and factual verification to the server.
  */
 public class MainActivity27 extends MainActivity {
     ServerQuizClient serverClient;
@@ -67,10 +67,11 @@ public class MainActivity27 extends MainActivity {
         generationRunning = true;
         base();
         title("PŘIPRAVUJI KVÍZ", cfg.title + " • " + cfg.count + " otázek");
-        TextView progress = tv("Připravuji jedno společné zadání…", 20, true);
+        TextView progress = tv("Připravuji otázky a ověřuji odpovědi…", 20, true);
         root.addView(progress);
-        root.addView(tv("Verze 2.7 posílá celý plán kvízu na náš server jako jedinou generační úlohu. OpenAI API klíč už telefon neposílá ani nepoužívá.", 16, false));
-        root.addView(tv("Při výpadku sítě se používá stejné ID přípravy. Server si stav tohoto ID pamatuje, takže opakování nenastartuje druhý generační běh.", 15, false));
+        root.addView(tv("Verze 2.7 odešle celý plán na server. Jeden AI krok otázky vytvoří a druhý je nezávisle vyřeší bez znalosti autorovy označené odpovědi.", 16, false));
+        root.addView(tv("Kvíz se spustí jen tehdy, když kontrola u každé otázky potvrdí jedinou správnou možnost, faktickou správnost a vysokou jistotu. Při neshodě server raději kvíz nevydá.", 15, false));
+        root.addView(tv("Při výpadku sítě se používá stejné ID přípravy. Server si stav tohoto ID pamatuje, takže opakování nenastartuje novou přípravu.", 15, false));
         Button pause = secondary("Pozastavit a uložit");
         root.addView(pause);
 
@@ -122,7 +123,7 @@ public class MainActivity27 extends MainActivity {
         home();
         new AlertDialog.Builder(this)
                 .setTitle(ServerQuizClient.errorTitle(e))
-                .setMessage(ServerQuizClient.errorMessage(e) + "\n\nZadání zůstalo uložené. Pokračování použije stejné ID přípravy.")
+                .setMessage(ServerQuizClient.errorMessage(e) + "\n\nZadání zůstalo uložené. Pokud kontrola kvality otázku odmítla, zvolte při dalším pokusu Nahradit novým a vytvoří se nové ID přípravy.")
                 .setPositiveButton("Pokračovat v přípravě", (d, w) -> resumeGeneration())
                 .setNegativeButton("Později", null)
                 .show();
@@ -130,11 +131,12 @@ public class MainActivity27 extends MainActivity {
 
     @Override void connection() {
         base();
-        title("PŘIPOJENÍ K AI", "Od verze 2.7 probíhá AI generování na našem serveru.");
+        title("PŘIPOJENÍ K AI", "Od verze 2.7 probíhá tvorba i kontrola kvízu na našem serveru.");
         TextView ok = tv("✓ Telefon už nevolá api.openai.com", 18, true);
         ok.setTextColor(GREEN);
         root.addView(ok);
-        root.addView(tv("Nový kvíz odešle pouze plán hry na kvízový server. Server vytvoří jeden AI generační běh pro celý kvíz a výsledek váže ke stejnému ID přípravy.", 15, false));
+        root.addView(tv("Nový kvíz odešle pouze plán hry. Server nejdřív vytvoří otázky a potom je druhý AI krok nezávisle vyřeší bez znalosti označených odpovědí autora.", 15, false));
+        root.addView(tv("Server vydá jen otázky, u kterých se oba kroky shodnou a kontrola je označí za faktické, jednoznačné a vysoce jisté.", 15, false));
         root.addView(tv("V telefonu proto není potřeba nastavovat ani měnit OpenAI API klíč.", 15, false));
 
         if (!getSecret().isEmpty()) {
