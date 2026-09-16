@@ -45,8 +45,6 @@ public class MainActivity27 extends MainActivity {
     @Override void resumeGeneration() {
         try {
             JSONObject journal = new JSONObject(prefs.getString("ai_pending", ""));
-            // Safely migrate a 2.6 preparation: keep the user's setup/plan, but discard
-            // old direct-OpenAI response IDs, drafts and repair loops.
             if (journal.optInt("version") != 27) {
                 if (!journal.has("context") || !journal.has("plan")) throw new JSONException("missing context");
                 journal.put("version", 27).put("request_id", newRequestId());
@@ -71,8 +69,8 @@ public class MainActivity27 extends MainActivity {
         title("PŘIPRAVUJI KVÍZ", cfg.title + " • " + cfg.count + " otázek");
         TextView progress = tv("Připravuji jedno společné zadání…", 20, true);
         root.addView(progress);
-        root.addView(tv("Verze 2.7 posílá celý kvíz na náš server jako jedinou generační úlohu. OpenAI API klíč už telefon neposílá ani nepoužívá.", 16, false));
-        root.addView(tv("Při výpadku sítě se opakuje stejné ID požadavku. Server ho používá jako idempotentní klíč, takže opakování nemá vytvářet nový placený modelový job.", 15, false));
+        root.addView(tv("Verze 2.7 posílá celý plán kvízu na náš server jako jedinou generační úlohu. OpenAI API klíč už telefon neposílá ani nepoužívá.", 16, false));
+        root.addView(tv("Při výpadku sítě se používá stejné ID přípravy. Server si stav tohoto ID pamatuje, takže opakování nenastartuje druhý generační běh.", 15, false));
         Button pause = secondary("Pozastavit a uložit");
         root.addView(pause);
 
@@ -124,7 +122,7 @@ public class MainActivity27 extends MainActivity {
         home();
         new AlertDialog.Builder(this)
                 .setTitle(ServerQuizClient.errorTitle(e))
-                .setMessage(ServerQuizClient.errorMessage(e) + "\n\nZadání zůstalo uložené. Pokračování použije stejné ID požadavku.")
+                .setMessage(ServerQuizClient.errorMessage(e) + "\n\nZadání zůstalo uložené. Pokračování použije stejné ID přípravy.")
                 .setPositiveButton("Pokračovat v přípravě", (d, w) -> resumeGeneration())
                 .setNegativeButton("Později", null)
                 .show();
@@ -132,11 +130,11 @@ public class MainActivity27 extends MainActivity {
 
     @Override void connection() {
         base();
-        title("PŘIPOJENÍ K AI", "Od verze 2.7 je OpenAI klíč pouze na našem serveru.");
+        title("PŘIPOJENÍ K AI", "Od verze 2.7 probíhá AI generování na našem serveru.");
         TextView ok = tv("✓ Telefon už nevolá api.openai.com", 18, true);
         ok.setTextColor(GREEN);
         root.addView(ok);
-        root.addView(tv("Nový kvíz odešle jen plán hry na kvízový server. Server používá levnější GPT-5.6 Luna a jeden generační požadavek pro celý kvíz.", 15, false));
+        root.addView(tv("Nový kvíz odešle pouze plán hry na kvízový server. Server vytvoří jeden AI generační běh pro celý kvíz a výsledek váže ke stejnému ID přípravy.", 15, false));
         root.addView(tv("V telefonu proto není potřeba nastavovat ani měnit OpenAI API klíč.", 15, false));
 
         if (!getSecret().isEmpty()) {
