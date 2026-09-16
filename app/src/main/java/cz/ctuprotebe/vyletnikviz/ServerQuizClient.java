@@ -1,0 +1,211 @@
+package cz.ctuprotebe.vyletnikviz;
+
+import org.json.*;
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
+import java.util.*;
+
+/**
+ * Version 2.7 network client. The phone sends one complete quiz plan to our server.
+ * The server owns the OpenAI key and uses a stable request_id as an upstream
+ * idempotency key, so an ambiguous mobile-network retry does not create a second
+ * paid model job.
+ */
+final class ServerQuizClient {
+    static final String ENDPOINT = "https://vyletni-kviz-api.daniel-pohl.chatgpt.site/generate";
+    static final String APP_TOKEN = "vk27_server_bridge_2026_09";
+    static final long[] RETRY_DELAYS_MS = {2000, 5000, 9000};
+
+    interface Checkpoint { void save() throws Exception; }
+    interface Progress { void show(String text); }
+
+    static final class ServerException extends IOException {
+        final int status;
+        final String code;
+        ServerException(int status, String code, String message) {
+            super(message); this.status = status; this.code = code == null ? "" : code;
+        }
+    }
+
+    private final JSONObject journal;
+    private final Checkpoint checkpoint;
+    private final Progress progress;
+    private volatile HttpURLConnection active;
+    volatile boolean paused;
+
+    ServerQuizClient(JSONObject journal, Checkpoint checkpoint, Progress progress) {
+        this.journal = journal;
+        this.checkpoint = checkpoint;
+        this.progress = progress == null ? text -> {} : progress;
+    }
+
+    void pause() {
+        paused = true;
+        HttpURLConnection c = active;
+        if (c != null) c.disconnect();
+    }
+
+    JSONObject generate() throws Exception {
+        checkPaused();
+        JSONObject cached = journal.optJSONObject("server_result");
+        if (cached != null) {
+            validate(cached);
+            progress.show("Hotový kvíz je už uložený v telefonu.");
+            return cached;
+        }
+
+        if (!journal.has("request_id")) {
+            journal.put("request_id", "vk27_" + UUID.randomUUID().toString().replace("-", ""));
+            checkpoint.save();
+        }
+        String requestId = journal.getString("request_id");
+        if (!requestId.matches("[A-Za-z0-9_-]{12,80}")) throw new IOException("Neplatný identifikátor přípravy.");
+
+        JSONObject body = new JSONObject()
+                .put("request_id", requestId)
+                .put("as_of", journal.optString("as_of"))
+                .put("context", journal.getJSONObject("context"))
+                .put("plan", journal.getJSONArray("plan"));
+
+        Exception last = null;
+        for (int attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+            checkPaused();
+            try {
+                progress.show(attempt == 0
+                        ? "Odesílám celý kvíz na náš server • pouze 1 generační úloha…"
+                        : "Síť kolísá • bezpečně opakuji stejný požadavek " + (attempt + 1) + "/" + (RETRY_DELAYS_MS.length + 1));
+                JSONObject result = post(body);
+                validate(result);
+                journal.put("server_result", result);
+                checkpoint.save();
+                progress.show("Kvíz dorazil • ukládám a spouštím hru…");
+                return result;
+            } catch (UnknownHostException | ConnectException | SocketTimeoutException e) {
+                last = e;
+                if (attempt >= RETRY_DELAYS_MS.length) break;
+                waitForRetry(RETRY_DELAYS_MS[attempt]);
+            }
+        }
+        if (last instanceof Exception) throw last;
+        throw new IOException("Server se nepodařilo kontaktovat.");
+    }
+
+    private JSONObject post(JSONObject body) throws Exception {
+        checkPaused();
+        HttpURLConnection c = (HttpURLConnection) new URL(ENDPOINT).openConnection();
+        active = c;
+        try {
+            c.setRequestMethod("POST");
+            c.setConnectTimeout(20000);
+            c.setReadTimeout(210000);
+            c.setInstanceFollowRedirects(false);
+            c.setDoOutput(true);
+            c.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+            c.setRequestProperty("X-App-Token", APP_TOKEN);
+            byte[] payload = body.toString().getBytes(StandardCharsets.UTF_8);
+            c.setFixedLengthStreamingMode(payload.length);
+            try (OutputStream out = c.getOutputStream()) { out.write(payload); }
+
+            int status = c.getResponseCode();
+            InputStream stream = status >= 200 && status < 300 ? c.getInputStream() : c.getErrorStream();
+            String text = read(stream);
+            if (status < 200 || status >= 300) {
+                String code = "";
+                String message = statusMessage(status);
+                try {
+                    JSONObject error = new JSONObject(text);
+                    code = safeCode(error.optString("code"));
+                    String serverMessage = error.optString("error").trim();
+                    if (!serverMessage.isEmpty()) message = serverMessage;
+                } catch (Exception ignored) {}
+                throw new ServerException(status, code, message);
+            }
+            return new JSONObject(text);
+        } finally {
+            c.disconnect();
+            active = null;
+        }
+    }
+
+    private String read(InputStream in) throws Exception {
+        if (in == null) return "";
+        try (InputStream source = in; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int n;
+            while ((n = source.read(buffer)) != -1) {
+                checkPaused();
+                if (out.size() + n > 4 * 1024 * 1024) throw new IOException("Odpověď serveru je příliš velká.");
+                out.write(buffer, 0, n);
+            }
+            return out.toString("UTF-8");
+        }
+    }
+
+    private void validate(JSONObject result) throws Exception {
+        JSONArray plan = journal.getJSONArray("plan");
+        JSONArray questions = result.getJSONArray("questions");
+        if (questions.length() != plan.length()) throw new IOException("Server vrátil jiný počet otázek.");
+        Set<String> seen = new HashSet<>();
+        for (int i = 0; i < plan.length(); i++) {
+            JSONObject slot = plan.getJSONObject(i), q = questions.getJSONObject(i);
+            if (q.getInt("slot") != slot.getInt("slot")
+                    || !q.getString("assigned_player").equals(slot.getString("assigned_player"))
+                    || !q.getString("requested_topic").equals(slot.getString("requested_topic"))
+                    || q.getBoolean("hard") != slot.getBoolean("hard"))
+                throw new IOException("Server nedodržel plán kvízu.");
+            String key = normalize(q.getString("question"));
+            if (key.isEmpty() || !seen.add(key)) throw new IOException("Server vrátil duplicitní otázku.");
+            JSONArray options = q.getJSONArray("options");
+            if (options.length() != 4 || q.getInt("correct") < 0 || q.getInt("correct") > 3)
+                throw new IOException("Server vrátil neplatnou otázku.");
+            Set<String> optionKeys = new HashSet<>();
+            for (int j = 0; j < 4; j++) if (!optionKeys.add(normalize(options.getString(j))))
+                throw new IOException("Server vrátil duplicitní možnosti.");
+            if (q.optString("explanation").trim().length() < 20)
+                throw new IOException("U otázky chybí vysvětlení.");
+        }
+    }
+
+    static String normalize(String text) {
+        return Normalizer.normalize(text == null ? "" : text, Normalizer.Form.NFKC)
+                .toLowerCase(Locale.ROOT).replaceAll("[\\p{P}\\p{Z}\\s]+", " ").trim();
+    }
+
+    private void waitForRetry(long millis) throws Exception {
+        checkPaused();
+        Thread.sleep(millis);
+        checkPaused();
+    }
+
+    private void checkPaused() throws InterruptedIOException {
+        if (paused || Thread.currentThread().isInterrupted()) throw new InterruptedIOException("Příprava byla pozastavena.");
+    }
+
+    static String safeCode(String value) {
+        return value != null && value.matches("[A-Za-z0-9_.-]{1,80}") ? value : "";
+    }
+
+    static String statusMessage(int status) {
+        if (status == 401) return "Aplikace a server nemají stejnou verzi přístupu. Aktualizujte server nebo aplikaci.";
+        if (status == 429) return "Server hlásí vyčerpaný kredit nebo dočasný limit OpenAI. Nic se automaticky znovu negeneruje.";
+        if (status >= 500) return "Server teď kvíz nedokončil. Zadání zůstalo uložené a další pokus použije stejné ID.";
+        return "Server odmítl požadavek (HTTP " + status + ").";
+    }
+
+    static String errorTitle(Exception e) {
+        if (e instanceof UnknownHostException || e instanceof ConnectException) return "Nepodařilo se připojit k serveru";
+        if (e instanceof SocketTimeoutException) return "Server odpovídal příliš dlouho";
+        if (e instanceof ServerException) return "Server kvíz nedokončil";
+        return "Příprava byla přerušena";
+    }
+
+    static String errorMessage(Exception e) {
+        if (e instanceof UnknownHostException) return "Telefon nedokázal najít náš kvízový server. OpenAI klíč v telefonu se už nepoužívá.";
+        if (e instanceof ConnectException) return "Kvízový server není z tohoto připojení dostupný. Zkuste Wi-Fi nebo mobilní data.";
+        if (e instanceof SocketTimeoutException) return "Spojení se přerušilo při čekání. Pokračování bezpečně zopakuje stejné ID požadavku, ne nový placený kvíz.";
+        if (e instanceof ServerException || e instanceof IOException) return e.getMessage();
+        return "Kvíz se nepodařilo připravit. Zadání zůstalo uložené.";
+    }
+}
