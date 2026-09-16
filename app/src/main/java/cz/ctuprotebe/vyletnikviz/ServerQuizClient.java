@@ -9,8 +9,8 @@ import java.util.*;
 
 /**
  * Version 2.7 network client. The phone sends one complete quiz plan to our server.
- * The server owns the AI generation step and stores request_id state so an ambiguous
- * mobile-network retry does not create a second generation job.
+ * The server owns generation plus independent answer verification and stores
+ * request_id state so an ambiguous mobile-network retry does not start a new job.
  */
 final class ServerQuizClient {
     static final String ENDPOINT = "https://vyletni-kviz-api-ylr7h4.v2.appdeploy.ai/api/generate";
@@ -77,13 +77,13 @@ final class ServerQuizClient {
             checkPaused();
             try {
                 progress.show(attempt == 0
-                        ? "Odesílám celý kvíz na server • pouze 1 generační úloha…"
+                        ? "Server tvoří otázky a nezávisle kontroluje odpovědi…"
                         : "Navazuji na stejné ID přípravy " + (attempt + 1) + "/" + (RETRY_DELAYS_MS.length + 1));
                 JSONObject result = post(body);
                 validate(result);
                 journal.put("server_result", result);
                 checkpoint.save();
-                progress.show("Kvíz dorazil • ukládám a spouštím hru…");
+                progress.show("Kontrola prošla • ukládám a spouštím hru…");
                 return result;
             } catch (UnknownHostException | ConnectException | SocketTimeoutException | ProcessingException e) {
                 last = e;
@@ -194,21 +194,21 @@ final class ServerQuizClient {
     static String statusMessage(int status) {
         if (status == 401) return "Aplikace a server nemají stejnou verzi přístupu.";
         if (status == 429) return "Server hlásí dočasný limit. Nic se automaticky znovu negeneruje.";
-        if (status >= 500) return "Server teď kvíz nedokončil. Zadání zůstalo uložené a další pokus použije stejné ID.";
+        if (status >= 500) return "Server kvíz nevydal. Buď generování selhalo, nebo některá otázka neprošla nezávislou kontrolou správnosti.";
         return "Server odmítl požadavek (HTTP " + status + ").";
     }
 
     static String errorTitle(Exception e) {
         if (e instanceof UnknownHostException || e instanceof ConnectException) return "Nepodařilo se připojit k serveru";
         if (e instanceof SocketTimeoutException || e instanceof ProcessingException) return "Server ještě připravuje kvíz";
-        if (e instanceof ServerException) return "Server kvíz nedokončil";
+        if (e instanceof ServerException) return "Kvíz neprošel přípravou";
         return "Příprava byla přerušena";
     }
 
     static String errorMessage(Exception e) {
         if (e instanceof UnknownHostException) return "Telefon nedokázal najít kvízový server. OpenAI API klíč v telefonu se už nepoužívá.";
         if (e instanceof ConnectException) return "Kvízový server není z tohoto připojení dostupný. Zkuste Wi-Fi nebo mobilní data.";
-        if (e instanceof SocketTimeoutException || e instanceof ProcessingException) return "Server může stále pracovat. Pokračování použije stejné ID přípravy a nevytvoří další generační úlohu.";
+        if (e instanceof SocketTimeoutException || e instanceof ProcessingException) return "Server může stále pracovat. Pokračování použije stejné ID přípravy a nenastartuje novou přípravu.";
         if (e instanceof ServerException || e instanceof IOException) return e.getMessage();
         return "Kvíz se nepodařilo připravit. Zadání zůstalo uložené.";
     }
