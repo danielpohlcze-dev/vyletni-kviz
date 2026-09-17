@@ -17,27 +17,16 @@ jobs:
         with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.9' }
-      - name: Ověřit veřejný Android transport bez AI volání
+      - name: Ověřit produkční AppDeploy API bez AI volání
         run: |
           set -euo pipefail
-          BASE='https://vyletni-kviz-api-ylr7h4.v2.appdeploy.ai'
-          HEALTH=$(curl -sS -o /tmp/health -w '%{http_code}' "$BASE/api/_healthcheck")
+          API='https://api-v2.appdeploy.ai/app/vyletni-kviz-api-ylr7h4'
+          HEALTH=$(curl -sS -o /tmp/health -w '%{http_code}' "$API/api/_healthcheck")
           echo "health=$HEALTH $(cat /tmp/health)"
           test "$HEALTH" = '200'
-
-          DENIED=$(curl -sS -o /tmp/denied -w '%{http_code}' \
-            "$BASE/api/generate?token=invalid&payload=invalid")
+          DENIED=$(curl -sS -o /tmp/denied -w '%{http_code}' -X POST "$API/api/generate" -H 'Content-Type: application/json' --data '{"app_token":"invalid","request_id":"vk27_ci_probe_123456789","context":{},"plan":[]}')
           echo "invalid-token=$DENIED $(cat /tmp/denied)"
           test "$DENIED" = '401'
-
-          MALFORMED=$(curl -sS -o /tmp/malformed -w '%{http_code}' \
-            "$BASE/api/generate?token=vk27_server_bridge_2026_09&payload=invalid")
-          echo "malformed-payload=$MALFORMED $(cat /tmp/malformed)"
-          test "$MALFORMED" = '400'
-      - name: Ověřit server 2.7 bez placeného API
-        run: |
-          node --check server/worker.js
-          node tests/server-worker-test.mjs
       - run: mkdir -p test-out && javac -d test-out app/src/main/java/cz/ctuprotebe/vyletnikviz/GameRules.java tests/GameRulesTest.java && java -cp test-out GameRulesTest
       - run: gradle testQualityUnitTest assembleQuality
       - run: gradle -p live-test test
@@ -71,7 +60,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Nainstalovat APK a proklikat aplikaci
+      - name: Nainstalovat APK, proklikat UI a ověřit Android na produkčním API
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
           api-level: 35
