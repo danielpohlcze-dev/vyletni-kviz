@@ -26,9 +26,9 @@ public class Version27ActivityTest {
             onView(withText("⛰  VÝLETNÍ KVÍZ")).check(matches(isDisplayed()));
             onView(withText("⚙  Připojení k AI")).perform(click());
             onView(withText("PŘIPOJENÍ K AI")).check(matches(isDisplayed()));
-            onView(withText("✓ Telefon už nevolá api.openai.com")).check(matches(isDisplayed()));
-            onView(withText("Od verze 2.7 probíhá tvorba i kontrola kvízu na našem serveru.")).check(matches(isDisplayed()));
-            onView(withText("Pokud některá otázka neprojde, server nahradí nejvýše jednou jen odmítnuté otázky. Kvíz vydá pouze tehdy, když kontrola potvrdí faktickou správnost, jednoznačnost a vysokou jistotu.")).check(matches(isDisplayed()));
+            onView(withText("✓ V telefonu není potřeba OpenAI API klíč")).check(matches(isDisplayed()));
+            onView(withText("Tvorba i kontrola kvízu probíhá na serveru.")).check(matches(isDisplayed()));
+            onView(withText("Sporné otázky se nevydají do hry. Opravují se jen problematické kusy, nejvýše ve třech cílených kolech.")).check(matches(isDisplayed()));
         }
     }
 }
