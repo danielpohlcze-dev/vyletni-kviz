@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class LiveAiGenerationE2ETest {
     private static final String TAG = "LiveAiE2E";
-    private static final String REQUEST_ID = "vk27_android_ai_live_20260917_004";
+    private static final String REQUEST_ID = "vk27_android_ai_live_20260917_005";
 
     @Test public void androidGeneratesValidQuizAndCompletesHumanStyleTripGame() throws Exception {
         JSONArray players = new JSONArray()
@@ -118,8 +118,6 @@ public class LiveAiGenerationE2ETest {
                         assertEquals(i % 2, a.game.owner);
                         int correct = a.quiz.get(i).correct;
 
-                        // Jako skutečná parta: někdy správně napoprvé, někdy chyba a převzetí,
-                        // jindy hráč řekne „nevím“ a pošle otázku dál.
                         if (i % 4 == 0) {
                             int wrong = (correct + 1) % 4;
                             a.answer(wrong);
