@@ -27,6 +27,35 @@ jobs:
           DENIED=$(curl -sS -o /tmp/denied -w '%{http_code}' -X POST "$API/api/generate" -H 'Content-Type: application/json' --data '{"app_token":"invalid","request_id":"vk27_ci_probe_123456789","context":{},"plan":[]}')
           echo "invalid-token=$DENIED $(cat /tmp/denied)"
           test "$DENIED" = '401'
+      - name: Diagnostika již selhaného AI E2E requestu bez nového generování
+        run: |
+          set -euo pipefail
+          API='https://api-v2.appdeploy.ai/app/vyletni-kviz-api-ylr7h4'
+          cat > /tmp/live.json <<'JSON'
+          {
+            "app_token":"vk27_server_bridge_2026_09",
+            "request_id":"vk27_android_ai_live_20260917_001",
+            "as_of":"2026-09-17",
+            "context":{"players":[{"name":"Barča","topic":"Psychologie","color":1},{"name":"Dominik","topic":"Lední hokej","color":2}],"title":"E2E test výletního kvízu","date":"17. 09. 2026","note":"diagnostika","photos":[],"count":10,"diff":"Vyvážená","cats":["Česko","Svět","Historie","Příroda","Věda a technika","Kultura"],"strong":true,"strongEvery":3,"bizarre":true,"bizarreEvery":5,"sound":false},
+            "plan":[
+              {"slot":1,"assigned_player":"Barča","requested_topic":"Historie – Česko","mode":"vseobecny","hard":false,"difficulty":"Vyvážená"},
+              {"slot":2,"assigned_player":"Dominik","requested_topic":"Příroda – svět","mode":"vseobecny","hard":false,"difficulty":"Vyvážená"},
+              {"slot":3,"assigned_player":"Barča","requested_topic":"Věda a technika – Česko","mode":"vseobecny","hard":false,"difficulty":"Vyvážená"},
+              {"slot":4,"assigned_player":"Dominik","requested_topic":"Kultura – svět","mode":"vseobecny","hard":false,"difficulty":"Vyvážená"},
+              {"slot":5,"assigned_player":"Barča","requested_topic":"Bizarní svět – pravdivý překvapivý fakt","mode":"bizarni","hard":false,"difficulty":"Vyvážená"},
+              {"slot":6,"assigned_player":"Dominik","requested_topic":"Zeměpis – Česko","mode":"vseobecny","hard":true,"difficulty":"Vyvážená"},
+              {"slot":7,"assigned_player":"Barča","requested_topic":"Historie – svět","mode":"vseobecny","hard":false,"difficulty":"Vyvážená"},
+              {"slot":8,"assigned_player":"Dominik","requested_topic":"Gastronomie – Česko","mode":"vseobecny","hard":false,"difficulty":"Vyvážená"},
+              {"slot":9,"assigned_player":"Barča","requested_topic":"Psychologie","mode":"silny_okruh","hard":true,"difficulty":"Vyvážená"},
+              {"slot":10,"assigned_player":"Dominik","requested_topic":"Lední hokej","mode":"silny_okruh","hard":true,"difficulty":"Vyvážená"}
+            ]
+          }
+          JSON
+          CODE=$(curl -sS -o /tmp/live-body -w '%{http_code}' -X POST "$API/api/generate" -H 'Content-Type: application/json' --data-binary @/tmp/live.json)
+          echo "diagnostic-status=$CODE"
+          cat /tmp/live-body
+          echo
+          test "$CODE" = '502'
       - run: mkdir -p test-out && javac -d test-out app/src/main/java/cz/ctuprotebe/vyletnikviz/GameRules.java tests/GameRulesTest.java && java -cp test-out GameRulesTest
       - run: gradle testQualityUnitTest assembleQuality
       - run: gradle -p live-test test
