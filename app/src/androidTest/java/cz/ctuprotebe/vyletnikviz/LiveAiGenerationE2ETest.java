@@ -16,7 +16,7 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class LiveAiGenerationE2ETest {
     private static final String TAG = "LiveAiE2E";
-    private static final String REQUEST_ID = "vk27_android_ai_live_20260917_002";
+    private static final String REQUEST_ID = "vk27_android_ai_live_20260917_003";
 
     @Test public void androidGeneratesAndValidatesTenRealAiQuestions() throws Exception {
         JSONArray players = new JSONArray()
