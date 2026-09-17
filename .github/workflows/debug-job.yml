@@ -1,0 +1,16 @@
+name: Read AI E2E diagnostics
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/debug-job.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read persisted request without AI generation
+        run: |
+          set -euo pipefail
+          URL='https://api-v2.appdeploy.ai/app/vyletni-kviz-api-ylr7h4/api/_debug_job?request_id=vk27_android_ai_live_20260917_003'
+          curl -fsS "$URL"
+          echo
