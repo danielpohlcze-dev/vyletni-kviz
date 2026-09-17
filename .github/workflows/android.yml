@@ -17,34 +17,23 @@ jobs:
         with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.9' }
-      - name: Ověřit veřejný přístup na nasazený server bez AI volání
+      - name: Ověřit veřejný Android transport bez AI volání
         run: |
-          set -u
+          set -euo pipefail
           BASE='https://vyletni-kviz-api-ylr7h4.v2.appdeploy.ai'
-          echo '--- health GET ---'
-          curl -sS -D /tmp/h1 -o /tmp/b1 "$BASE/api/_healthcheck" || true
-          head -n 1 /tmp/h1 || true
-          cat /tmp/b1 || true
-          echo
-          echo '--- POST invalid token, native-like ---'
-          curl -sS -D /tmp/h2 -o /tmp/b2 -X POST "$BASE/api/generate" \
-            -H 'Content-Type: application/json; charset=utf-8' \
-            -H 'X-App-Token: invalid' \
-            -H 'User-Agent: Dalvik/2.1.0 (Linux; U; Android 16)' \
-            --data '{"request_id":"vk27_probe_123456789","context":{},"plan":[]}' || true
-          head -n 1 /tmp/h2 || true
-          cat /tmp/b2 || true
-          echo
-          echo '--- POST invalid token, browser-origin-like ---'
-          curl -sS -D /tmp/h3 -o /tmp/b3 -X POST "$BASE/api/generate" \
-            -H 'Content-Type: application/json' \
-            -H 'X-App-Token: invalid' \
-            -H "Origin: $BASE" \
-            -H "Referer: $BASE/" \
-            --data '{"request_id":"vk27_probe_123456789","context":{},"plan":[]}' || true
-          head -n 1 /tmp/h3 || true
-          cat /tmp/b3 || true
-          echo
+          HEALTH=$(curl -sS -o /tmp/health -w '%{http_code}' "$BASE/api/_healthcheck")
+          echo "health=$HEALTH $(cat /tmp/health)"
+          test "$HEALTH" = '200'
+
+          DENIED=$(curl -sS -o /tmp/denied -w '%{http_code}' \
+            "$BASE/api/generate?token=invalid&payload=invalid")
+          echo "invalid-token=$DENIED $(cat /tmp/denied)"
+          test "$DENIED" = '401'
+
+          MALFORMED=$(curl -sS -o /tmp/malformed -w '%{http_code}' \
+            "$BASE/api/generate?token=vk27_server_bridge_2026_09&payload=invalid")
+          echo "malformed-payload=$MALFORMED $(cat /tmp/malformed)"
+          test "$MALFORMED" = '400'
       - name: Ověřit server 2.7 bez placeného API
         run: |
           node --check server/worker.js
