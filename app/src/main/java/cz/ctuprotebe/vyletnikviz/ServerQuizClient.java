@@ -6,7 +6,6 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.*;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * Version 2.7 network client. The phone sends one complete quiz plan to our server.
@@ -14,7 +13,7 @@ import java.util.zip.GZIPOutputStream;
  * request_id state so an ambiguous mobile-network retry does not start a new job.
  */
 final class ServerQuizClient {
-    static final String ENDPOINT = "https://vyletni-kviz-api-ylr7h4.v2.appdeploy.ai/api/generate";
+    static final String ENDPOINT = "https://api-v2.appdeploy.ai/app/vyletni-kviz-api-ylr7h4/api/generate";
     static final String APP_TOKEN = "vk27_server_bridge_2026_09";
     static final long[] RETRY_DELAYS_MS = {2000, 5000, 9000, 15000, 20000};
 
@@ -68,6 +67,7 @@ final class ServerQuizClient {
         if (!requestId.matches("[A-Za-z0-9_-]{12,80}")) throw new IOException("Neplatný identifikátor přípravy.");
 
         JSONObject body = new JSONObject()
+                .put("app_token", APP_TOKEN)
                 .put("request_id", requestId)
                 .put("as_of", journal.optString("as_of"))
                 .put("context", journal.getJSONObject("context"))
@@ -80,7 +80,7 @@ final class ServerQuizClient {
                 progress.show(attempt == 0
                         ? "Server tvoří otázky a nezávisle kontroluje odpovědi…"
                         : "Navazuji na stejné ID přípravy " + (attempt + 1) + "/" + (RETRY_DELAYS_MS.length + 1));
-                JSONObject result = get(body);
+                JSONObject result = post(body);
                 validate(result);
                 journal.put("server_result", result);
                 checkpoint.save();
@@ -96,24 +96,12 @@ final class ServerQuizClient {
         throw new IOException("Server se nepodařilo kontaktovat.");
     }
 
-    private JSONObject get(JSONObject body) throws Exception {
+    private JSONObject post(JSONObject body) throws Exception {
         checkPaused();
-        String payload = encodeTransportPayload(body);
-        String url = ENDPOINT
-                + "?token=" + APP_TOKEN
-                + "&payload=" + payload
-                + "&poll=" + UUID.randomUUID().toString().replace("-", "");
-        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+        HttpURLConnection c = openConnection();
         active = c;
         try {
-            c.setRequestMethod("GET");
-            c.setConnectTimeout(20000);
-            c.setReadTimeout(210000);
-            c.setInstanceFollowRedirects(false);
-            c.setUseCaches(false);
-            c.setRequestProperty("Accept", "application/json");
-            c.setRequestProperty("Cache-Control", "no-store");
-
+            writeJson(c, body);
             int status = c.getResponseCode();
             InputStream stream = status >= 200 && status < 300 ? c.getInputStream() : c.getErrorStream();
             String text = read(stream);
@@ -136,12 +124,52 @@ final class ServerQuizClient {
         }
     }
 
-    static String encodeTransportPayload(JSONObject body) throws Exception {
-        ByteArrayOutputStream compressed = new ByteArrayOutputStream();
-        try (GZIPOutputStream gzip = new GZIPOutputStream(compressed)) {
-            gzip.write(body.toString().getBytes(StandardCharsets.UTF_8));
+    private static HttpURLConnection openConnection() throws Exception {
+        HttpURLConnection c = (HttpURLConnection) new URL(ENDPOINT).openConnection();
+        c.setRequestMethod("POST");
+        c.setConnectTimeout(20000);
+        c.setReadTimeout(300000);
+        c.setInstanceFollowRedirects(false);
+        c.setUseCaches(false);
+        c.setDoOutput(true);
+        c.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+        c.setRequestProperty("Accept", "application/json");
+        c.setRequestProperty("Cache-Control", "no-store");
+        return c;
+    }
+
+    private static void writeJson(HttpURLConnection c, JSONObject body) throws Exception {
+        byte[] payload = body.toString().getBytes(StandardCharsets.UTF_8);
+        c.setFixedLengthStreamingMode(payload.length);
+        try (OutputStream out = c.getOutputStream()) {
+            out.write(payload);
         }
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(compressed.toByteArray());
+    }
+
+    /**
+     * Zero-cost production transport probe used by the Android instrumentation suite.
+     * Both variants stop before any AI call: invalid token => 401, valid token + empty plan => 400.
+     */
+    static int probeDeployedPostStatus(boolean validToken) throws Exception {
+        JSONObject body = new JSONObject()
+                .put("app_token", validToken ? APP_TOKEN : "invalid")
+                .put("request_id", "vk27_android_probe_123456789")
+                .put("context", new JSONObject())
+                .put("plan", new JSONArray());
+        HttpURLConnection c = openConnection();
+        c.setReadTimeout(30000);
+        try {
+            writeJson(c, body);
+            int status = c.getResponseCode();
+            InputStream stream = status >= 200 && status < 300 ? c.getInputStream() : c.getErrorStream();
+            if (stream != null) try (InputStream in = stream) {
+                byte[] buffer = new byte[1024];
+                while (in.read(buffer) != -1) { /* drain */ }
+            }
+            return status;
+        } finally {
+            c.disconnect();
+        }
     }
 
     private String read(InputStream in) throws Exception {
@@ -204,9 +232,9 @@ final class ServerQuizClient {
 
     static String statusMessage(int status) {
         if (status == 401) return "Aplikace a server nemají stejnou verzi přístupu.";
-        if (status == 403) return "Server odmítl způsob připojení. Tato verze aplikace už používá kompatibilní přenos; pokud chybu vidíte znovu, nainstalujte nejnovější APK.";
+        if (status == 403) return "Server odmítl připojení. Tato verze používá přímo aplikační API; pokud chybu vidíte znovu, nainstalujte nejnovější APK.";
         if (status == 429) return "Server hlásí dočasný limit. Nic se automaticky znovu negeneruje.";
-        if (status >= 500) return "Server kvíz nevydal. Buď generování selhalo, nebo některá otázka neprošla nezávislou kontrolou správnosti.";
+        if (status >= 500) return "Server kvíz nevydal. Problematické otázky dostaly nejvýše jednu cílenou opravu a ani ta neprošla kontrolou správnosti.";
         return "Server odmítl požadavek (HTTP " + status + ").";
     }
 
