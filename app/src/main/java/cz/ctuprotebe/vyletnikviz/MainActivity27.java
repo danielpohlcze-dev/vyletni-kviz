@@ -69,8 +69,8 @@ public class MainActivity27 extends MainActivity {
         title("PŘIPRAVUJI KVÍZ", cfg.title + " • " + cfg.count + " otázek");
         TextView progress = tv("Připravuji otázky a ověřuji odpovědi…", 20, true);
         root.addView(progress);
-        root.addView(tv("Verze 2.7 odešle celý plán na server. Jeden AI krok otázky vytvoří a druhý je nezávisle vyřeší bez znalosti autorovy označené odpovědi.", 16, false));
-        root.addView(tv("Kvíz se spustí jen tehdy, když kontrola u každé otázky potvrdí jedinou správnou možnost, faktickou správnost a vysokou jistotu. Při neshodě server raději kvíz nevydá.", 15, false));
+        root.addView(tv("Server nejdřív vytvoří celý kvíz a potom druhý AI krok každou otázku nezávisle vyřeší bez znalosti autorovy označené odpovědi.", 16, false));
+        root.addView(tv("Když kontrola některou otázku odmítne, server nahradí nejvýše jednou pouze problematické otázky a znovu ověří jen tyto náhrady. Nevzniká nekonečná opravná smyčka.", 15, false));
         root.addView(tv("Při výpadku sítě se používá stejné ID přípravy. Server si stav tohoto ID pamatuje, takže opakování nenastartuje novou přípravu.", 15, false));
         Button pause = secondary("Pozastavit a uložit");
         root.addView(pause);
@@ -121,12 +121,25 @@ public class MainActivity27 extends MainActivity {
 
     void showServerError(Exception e) {
         home();
-        new AlertDialog.Builder(this)
-                .setTitle(ServerQuizClient.errorTitle(e))
-                .setMessage(ServerQuizClient.errorMessage(e) + "\n\nZadání zůstalo uložené. Pokud kontrola kvality otázku odmítla, zvolte při dalším pokusu Nahradit novým a vytvoří se nové ID přípravy.")
-                .setPositiveButton("Pokračovat v přípravě", (d, w) -> resumeGeneration())
-                .setNegativeButton("Později", null)
-                .show();
+        boolean terminalQualityFailure = e instanceof ServerQuizClient.ServerException
+                && ((ServerQuizClient.ServerException) e).status == 502;
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this)
+                .setTitle(ServerQuizClient.errorTitle(e));
+        if (terminalQualityFailure) {
+            dialog.setMessage(ServerQuizClient.errorMessage(e)
+                            + "\n\nServer už provedl maximálně jednu cílenou opravu problematických otázek. Stejné ID se znovu negeneruje, aby se zbytečně nepálily kredity.")
+                    .setPositiveButton("Vytvořit nový pokus", (d, w) -> {
+                        prefs.edit().remove("ai_pending").apply();
+                        newGeneration();
+                    })
+                    .setNegativeButton("Později", null);
+        } else {
+            dialog.setMessage(ServerQuizClient.errorMessage(e)
+                            + "\n\nZadání zůstalo uložené. Pokračování použije stejné ID přípravy a nevytvoří další placenou úlohu.")
+                    .setPositiveButton("Pokračovat v přípravě", (d, w) -> resumeGeneration())
+                    .setNegativeButton("Později", null);
+        }
+        dialog.show();
     }
 
     @Override void connection() {
@@ -136,7 +149,7 @@ public class MainActivity27 extends MainActivity {
         ok.setTextColor(GREEN);
         root.addView(ok);
         root.addView(tv("Nový kvíz odešle pouze plán hry. Server nejdřív vytvoří otázky a potom je druhý AI krok nezávisle vyřeší bez znalosti označených odpovědí autora.", 15, false));
-        root.addView(tv("Server vydá jen otázky, u kterých se oba kroky shodnou a kontrola je označí za faktické, jednoznačné a vysoce jisté.", 15, false));
+        root.addView(tv("Pokud některá otázka neprojde, server nahradí nejvýše jednou jen odmítnuté otázky. Kvíz vydá pouze tehdy, když kontrola potvrdí faktickou správnost, jednoznačnost a vysokou jistotu.", 15, false));
         root.addView(tv("V telefonu proto není potřeba nastavovat ani měnit OpenAI API klíč.", 15, false));
 
         if (!getSecret().isEmpty()) {
