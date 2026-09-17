@@ -1,0 +1,83 @@
+package cz.ctuprotebe.vyletnikviz;
+
+import static org.junit.Assert.*;
+
+import android.util.Log;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+@RunWith(AndroidJUnit4.class)
+public class LiveAiGenerationE2ETest {
+    private static final String TAG = "LiveAiE2E";
+    private static final String REQUEST_ID = "vk27_android_ai_live_20260917_001";
+
+    @Test public void androidGeneratesAndValidatesTenRealAiQuestions() throws Exception {
+        JSONArray players = new JSONArray()
+                .put(new JSONObject().put("name", "Barča").put("topic", "Psychologie").put("color", 1))
+                .put(new JSONObject().put("name", "Dominik").put("topic", "Lední hokej").put("color", 2));
+
+        JSONObject context = new JSONObject()
+                .put("players", players)
+                .put("title", "E2E test výletního kvízu")
+                .put("date", "17. 09. 2026")
+                .put("note", "Jednorázový produkční test Android → backend → AI → kontrola")
+                .put("photos", new JSONArray())
+                .put("count", 10)
+                .put("diff", "Vyvážená")
+                .put("cats", new JSONArray().put("Česko").put("Svět").put("Historie").put("Příroda").put("Věda a technika").put("Kultura"))
+                .put("strong", true)
+                .put("strongEvery", 3)
+                .put("bizarre", true)
+                .put("bizarreEvery", 5)
+                .put("sound", false);
+
+        String[] topics = {
+                "Historie – Česko",
+                "Příroda – svět",
+                "Věda a technika – Česko",
+                "Kultura – svět",
+                "Bizarní svět – pravdivý překvapivý fakt",
+                "Zeměpis – Česko",
+                "Historie – svět",
+                "Gastronomie – Česko",
+                "Psychologie",
+                "Lední hokej"
+        };
+        JSONArray plan = new JSONArray();
+        for (int i = 0; i < 10; i++) {
+            plan.put(new JSONObject()
+                    .put("slot", i + 1)
+                    .put("assigned_player", i % 2 == 0 ? "Barča" : "Dominik")
+                    .put("requested_topic", topics[i])
+                    .put("mode", i == 4 ? "bizarni" : (i >= 8 ? "silny_okruh" : "vseobecny"))
+                    .put("hard", i == 5 || i >= 8)
+                    .put("difficulty", "Vyvážená"));
+        }
+
+        JSONObject journal = new JSONObject()
+                .put("version", 27)
+                .put("request_id", REQUEST_ID)
+                .put("as_of", "2026-09-17")
+                .put("context", context)
+                .put("plan", plan);
+
+        ServerQuizClient client = new ServerQuizClient(journal, () -> {}, text -> Log.i(TAG, text));
+        JSONObject result = client.generate();
+        JSONArray questions = result.getJSONArray("questions");
+        assertEquals(10, questions.length());
+
+        for (int i = 0; i < questions.length(); i++) {
+            JSONObject q = questions.getJSONObject(i);
+            assertEquals(i + 1, q.getInt("slot"));
+            assertEquals(4, q.getJSONArray("options").length());
+            assertTrue(q.getInt("correct") >= 0 && q.getInt("correct") <= 3);
+            assertTrue(q.getString("question").trim().length() >= 12);
+            assertTrue(q.getString("explanation").trim().length() >= 20);
+            String answer = q.getJSONArray("options").getString(q.getInt("correct"));
+            Log.i(TAG, "Q" + (i + 1) + ": " + q.getString("question") + " | správně: " + answer + " | " + q.getString("explanation"));
+        }
+    }
+}
