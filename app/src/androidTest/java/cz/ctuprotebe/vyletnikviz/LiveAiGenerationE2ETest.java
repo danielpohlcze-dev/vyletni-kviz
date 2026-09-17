@@ -2,8 +2,12 @@ package cz.ctuprotebe.vyletnikviz;
 
 import static org.junit.Assert.*;
 
+import android.content.Context;
 import android.util.Log;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import java.io.File;
+import java.io.FileWriter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -12,7 +16,7 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class LiveAiGenerationE2ETest {
     private static final String TAG = "LiveAiE2E";
-    private static final String REQUEST_ID = "vk27_android_ai_live_20260917_001";
+    private static final String REQUEST_ID = "vk27_android_ai_live_20260917_002";
 
     @Test public void androidGeneratesAndValidatesTenRealAiQuestions() throws Exception {
         JSONArray players = new JSONArray()
@@ -78,6 +82,13 @@ public class LiveAiGenerationE2ETest {
             assertTrue(q.getString("explanation").trim().length() >= 20);
             String answer = q.getJSONArray("options").getString(q.getInt("correct"));
             Log.i(TAG, "Q" + (i + 1) + ": " + q.getString("question") + " | správně: " + answer + " | " + q.getString("explanation"));
+        }
+
+        Context app = ApplicationProvider.getApplicationContext();
+        File dir = new File(app.getExternalFilesDir(null), "test-screens");
+        assertTrue(dir.exists() || dir.mkdirs());
+        try (FileWriter writer = new FileWriter(new File(dir, "ai-e2e.json"))) {
+            writer.write(result.toString(2));
         }
     }
 }
