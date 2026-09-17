@@ -7,18 +7,18 @@ android {
         applicationId 'cz.ctuprotebe.vyletnikviz'
         minSdk 26
         targetSdk 35
-        versionCode 13
-        versionName '2.7.0'
+        versionCode 14
+        versionName '2.7.1'
         manifestPlaceholders = [appLabel: 'Výletní kvíz']
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
-    // The previous CI debug signing key is unavailable. This variant installs alongside it,
-    // preserving the user's original app, credentials and trip history.
+    // The original production signing key is not available in CI. This fixed test
+    // variant therefore installs alongside older builds instead of risking their data.
     buildTypes {
         quality {
             initWith debug
-            applicationIdSuffix '.quality26'
-            manifestPlaceholders = [appLabel: 'Výletní kvíz 2.7.0']
+            applicationIdSuffix '.quality271'
+            manifestPlaceholders = [appLabel: 'Výletní kvíz 2.7.1']
             matchingFallbacks = ['debug']
         }
     }
