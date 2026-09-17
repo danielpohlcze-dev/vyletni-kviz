@@ -28,7 +28,7 @@ public class Version27ActivityTest {
             onView(withText("PŘIPOJENÍ K AI")).check(matches(isDisplayed()));
             onView(withText("✓ Telefon už nevolá api.openai.com")).check(matches(isDisplayed()));
             onView(withText("Od verze 2.7 probíhá tvorba i kontrola kvízu na našem serveru.")).check(matches(isDisplayed()));
-            onView(withText("Server vydá jen otázky, u kterých se oba kroky shodnou a kontrola je označí za faktické, jednoznačné a vysoce jisté.")).check(matches(isDisplayed()));
+            onView(withText("Pokud některá otázka neprojde, server nahradí nejvýše jednou jen odmítnuté otázky. Kvíz vydá pouze tehdy, když kontrola potvrdí faktickou správnost, jednoznačnost a vysokou jistotu.")).check(matches(isDisplayed()));
         }
     }
 }
