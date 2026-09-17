@@ -6,6 +6,7 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.*;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Version 2.7 network client. The phone sends one complete quiz plan to our server.
@@ -79,7 +80,7 @@ final class ServerQuizClient {
                 progress.show(attempt == 0
                         ? "Server tvoří otázky a nezávisle kontroluje odpovědi…"
                         : "Navazuji na stejné ID přípravy " + (attempt + 1) + "/" + (RETRY_DELAYS_MS.length + 1));
-                JSONObject result = post(body);
+                JSONObject result = get(body);
                 validate(result);
                 journal.put("server_result", result);
                 checkpoint.save();
@@ -95,21 +96,23 @@ final class ServerQuizClient {
         throw new IOException("Server se nepodařilo kontaktovat.");
     }
 
-    private JSONObject post(JSONObject body) throws Exception {
+    private JSONObject get(JSONObject body) throws Exception {
         checkPaused();
-        HttpURLConnection c = (HttpURLConnection) new URL(ENDPOINT).openConnection();
+        String payload = encodeTransportPayload(body);
+        String url = ENDPOINT
+                + "?token=" + APP_TOKEN
+                + "&payload=" + payload
+                + "&poll=" + UUID.randomUUID().toString().replace("-", "");
+        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         active = c;
         try {
-            c.setRequestMethod("POST");
+            c.setRequestMethod("GET");
             c.setConnectTimeout(20000);
             c.setReadTimeout(210000);
             c.setInstanceFollowRedirects(false);
-            c.setDoOutput(true);
-            c.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-            c.setRequestProperty("X-App-Token", APP_TOKEN);
-            byte[] payload = body.toString().getBytes(StandardCharsets.UTF_8);
-            c.setFixedLengthStreamingMode(payload.length);
-            try (OutputStream out = c.getOutputStream()) { out.write(payload); }
+            c.setUseCaches(false);
+            c.setRequestProperty("Accept", "application/json");
+            c.setRequestProperty("Cache-Control", "no-store");
 
             int status = c.getResponseCode();
             InputStream stream = status >= 200 && status < 300 ? c.getInputStream() : c.getErrorStream();
@@ -131,6 +134,14 @@ final class ServerQuizClient {
             c.disconnect();
             active = null;
         }
+    }
+
+    static String encodeTransportPayload(JSONObject body) throws Exception {
+        ByteArrayOutputStream compressed = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzip = new GZIPOutputStream(compressed)) {
+            gzip.write(body.toString().getBytes(StandardCharsets.UTF_8));
+        }
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(compressed.toByteArray());
     }
 
     private String read(InputStream in) throws Exception {
@@ -193,6 +204,7 @@ final class ServerQuizClient {
 
     static String statusMessage(int status) {
         if (status == 401) return "Aplikace a server nemají stejnou verzi přístupu.";
+        if (status == 403) return "Server odmítl způsob připojení. Tato verze aplikace už používá kompatibilní přenos; pokud chybu vidíte znovu, nainstalujte nejnovější APK.";
         if (status == 429) return "Server hlásí dočasný limit. Nic se automaticky znovu negeneruje.";
         if (status >= 500) return "Server kvíz nevydal. Buď generování selhalo, nebo některá otázka neprošla nezávislou kontrolou správnosti.";
         return "Server odmítl požadavek (HTTP " + status + ").";
