@@ -19,8 +19,8 @@ public class MainActivity27 extends MainActivity {
     @Override void generate(Button b) {
         if (prefs.contains("ai_pending")) {
             new AlertDialog.Builder(this)
-                    .setTitle("Máte rozpracovanou přípravu")
-                    .setMessage("Můžete pokračovat v uloženém zadání. Verze 2.7 už nepoužívá staré placené dávky z telefonu.")
+                    .setTitle("Máte rozpracovaný výletní kvíz")
+                    .setMessage("Můžete navázat přesně tam, kde příprava skončila. Stejné zadání se nebude zbytečně generovat znovu.")
                     .setPositiveButton("Pokračovat v uloženém", (d, w) -> resumeGeneration())
                     .setNegativeButton("Nahradit novým", (d, w) -> newGeneration())
                     .show();
@@ -66,13 +66,13 @@ public class MainActivity27 extends MainActivity {
         }
         generationRunning = true;
         base();
-        title("PŘIPRAVUJI KVÍZ", cfg.title + " • " + cfg.count + " otázek");
-        TextView progress = tv("Připravuji otázky a ověřuji odpovědi…", 20, true);
+        title("CHYSTÁM VÝLETNÍ KVÍZ", cfg.title + " • " + cfg.count + " otázek");
+        TextView progress = tv("Míchám otázky pro vaši partu…", 20, true);
         root.addView(progress);
-        root.addView(tv("Server nejdřív vytvoří celý kvíz a potom druhý AI krok každou otázku nezávisle vyřeší bez znalosti autorovy označené odpovědi.", 16, false));
-        root.addView(tv("Když kontrola některou otázku odmítne, server nahradí nejvýše jednou pouze problematické otázky a znovu ověří jen tyto náhrady. Nevzniká nekonečná opravná smyčka.", 15, false));
-        root.addView(tv("Při výpadku sítě se používá stejné ID přípravy. Server si stav tohoto ID pamatuje, takže opakování nenastartuje novou přípravu.", 15, false));
-        Button pause = secondary("Pozastavit a uložit");
+        root.addView(tv("Česko, svět, silné okruhy hráčů a občas pravdivá bizarnost. Každou otázku potom nezávisle zkontroluji, aby měla jedinou obhajitelnou odpověď.", 16, false));
+        root.addView(tv("Když kontrola najde spornou otázku, opraví se jen ona. Server má nejvýše tři cílená opravná kola, takže příprava nemůže běžet donekonečna.", 15, false));
+        root.addView(tv("Může to chvíli trvat, ale zadání je bezpečně uložené. Až bude kvíz připravený, samotné hraní funguje i bez internetu.", 15, false));
+        Button pause = secondary("Uložit a pokračovat později");
         root.addView(pause);
 
         ServerQuizClient.Checkpoint save = () -> {
@@ -127,7 +127,7 @@ public class MainActivity27 extends MainActivity {
                 .setTitle(ServerQuizClient.errorTitle(e));
         if (terminalQualityFailure) {
             dialog.setMessage(ServerQuizClient.errorMessage(e)
-                            + "\n\nServer už provedl maximálně jednu cílenou opravu problematických otázek. Stejné ID se znovu negeneruje, aby se zbytečně nepálily kredity.")
+                            + "\n\nServer už vyčerpal omezená cílená opravná kola. Stejné ID znovu nespouštím, aby nevznikala nekonečná smyčka.")
                     .setPositiveButton("Vytvořit nový pokus", (d, w) -> {
                         prefs.edit().remove("ai_pending").apply();
                         newGeneration();
@@ -135,7 +135,7 @@ public class MainActivity27 extends MainActivity {
                     .setNegativeButton("Později", null);
         } else {
             dialog.setMessage(ServerQuizClient.errorMessage(e)
-                            + "\n\nZadání zůstalo uložené. Pokračování použije stejné ID přípravy a nevytvoří další placenou úlohu.")
+                            + "\n\nZadání zůstalo uložené. Pokračování použije stejné ID přípravy a naváže na uložený stav.")
                     .setPositiveButton("Pokračovat v přípravě", (d, w) -> resumeGeneration())
                     .setNegativeButton("Později", null);
         }
@@ -144,22 +144,22 @@ public class MainActivity27 extends MainActivity {
 
     @Override void connection() {
         base();
-        title("PŘIPOJENÍ K AI", "Od verze 2.7 probíhá tvorba i kontrola kvízu na našem serveru.");
-        TextView ok = tv("✓ Telefon už nevolá api.openai.com", 18, true);
+        title("PŘIPOJENÍ K AI", "Tvorba i kontrola kvízu probíhá na serveru.");
+        TextView ok = tv("✓ V telefonu není potřeba OpenAI API klíč", 18, true);
         ok.setTextColor(GREEN);
         root.addView(ok);
-        root.addView(tv("Nový kvíz odešle pouze plán hry. Server nejdřív vytvoří otázky a potom je druhý AI krok nezávisle vyřeší bez znalosti označených odpovědí autora.", 15, false));
-        root.addView(tv("Pokud některá otázka neprojde, server nahradí nejvýše jednou jen odmítnuté otázky. Kvíz vydá pouze tehdy, když kontrola potvrdí faktickou správnost, jednoznačnost a vysokou jistotu.", 15, false));
-        root.addView(tv("V telefonu proto není potřeba nastavovat ani měnit OpenAI API klíč.", 15, false));
+        root.addView(tv("Telefon odešle jen plán hry. Server vytvoří otázky a nezávislý kontrolní krok je znovu vyřeší bez znalosti autorovy označené odpovědi.", 15, false));
+        root.addView(tv("Sporné otázky se nevydají do hry. Opravují se jen problematické kusy, nejvýše ve třech cílených kolech.", 15, false));
+        root.addView(tv("Při výpadku připojení se používá stejné ID přípravy, takže lze později bezpečně pokračovat.", 15, false));
 
         if (!getSecret().isEmpty()) {
-            TextView legacy = tv("Ve starší verzi zůstal v telefonu zašifrovaný OpenAI klíč. Verze 2.7 ho nepoužívá.", 14, false);
+            TextView legacy = tv("Ve starší verzi zůstal v telefonu zašifrovaný OpenAI klíč. Tato verze ho nepoužívá.", 14, false);
             legacy.setTextColor(Color.rgb(120, 80, 20));
             root.addView(legacy);
             Button remove = secondary("Odstranit starý OpenAI klíč z telefonu");
             remove.setOnClickListener(v -> new AlertDialog.Builder(this)
                     .setTitle("Odstranit starý klíč?")
-                    .setMessage("Pro verzi 2.7 už není potřeba. Historie ani kvízy se nesmažou.")
+                    .setMessage("Pro tuto verzi už není potřeba. Historie ani kvízy se nesmažou.")
                     .setPositiveButton("Odstranit", (d, w) -> { clearSecret(); toast("Starý klíč byl odstraněn"); connection(); })
                     .setNegativeButton("Ponechat", null)
                     .show());
