@@ -15,7 +15,13 @@ import java.util.*;
 final class ServerQuizClient {
     static final String ENDPOINT = "https://api-v2.appdeploy.ai/app/vyletni-kviz-api-ylr7h4/api/generate";
     static final String APP_TOKEN = "vk27_server_bridge_2026_09";
-    static final long[] RETRY_DELAYS_MS = {2000, 5000, 9000, 15000, 20000};
+
+    // The backend intentionally advances the same request through several persisted AI stages
+    // (author -> review -> optional repair/review rounds). A 202 therefore means "continue the
+    // same job", not "start over". Allow enough polls for the worst allowed repair path.
+    static final long[] RETRY_DELAYS_MS = {
+            1200, 1600, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 7000, 8000
+    };
 
     interface Checkpoint { void save() throws Exception; }
     interface Progress { void show(String text); }
@@ -29,7 +35,15 @@ final class ServerQuizClient {
     }
 
     static final class ProcessingException extends IOException {
-        ProcessingException() { super("Kvíz se na serveru ještě připravuje."); }
+        final String stage;
+        final int round;
+        final int rejected;
+        ProcessingException(String stage, int round, int rejected) {
+            super("Kvíz se na serveru ještě připravuje.");
+            this.stage = stage == null ? "" : stage;
+            this.round = round;
+            this.rejected = rejected;
+        }
     }
 
     private final JSONObject journal;
@@ -77,23 +91,41 @@ final class ServerQuizClient {
         for (int attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
             checkPaused();
             try {
-                progress.show(attempt == 0
-                        ? "Server tvoří otázky a nezávisle kontroluje odpovědi…"
-                        : "Navazuji na stejné ID přípravy " + (attempt + 1) + "/" + (RETRY_DELAYS_MS.length + 1));
+                if (attempt == 0) progress.show("Vymýšlím otázky pro váš výlet…");
                 JSONObject result = post(body);
                 validate(result);
                 journal.put("server_result", result);
                 checkpoint.save();
-                progress.show("Kontrola prošla • ukládám a spouštím hru…");
+                progress.show("Otázky prošly kontrolou • spouštím hru…");
                 return result;
-            } catch (UnknownHostException | ConnectException | SocketTimeoutException | ProcessingException e) {
+            } catch (ProcessingException e) {
                 last = e;
+                progress.show(progressText(e));
+                if (attempt >= RETRY_DELAYS_MS.length) break;
+                waitForRetry(RETRY_DELAYS_MS[attempt]);
+            } catch (UnknownHostException | ConnectException | SocketTimeoutException e) {
+                last = e;
+                progress.show("Spojení zakolísalo • navazuji na stejnou přípravu…");
                 if (attempt >= RETRY_DELAYS_MS.length) break;
                 waitForRetry(RETRY_DELAYS_MS[attempt]);
             }
         }
         if (last != null) throw last;
         throw new IOException("Server se nepodařilo kontaktovat.");
+    }
+
+    static String progressText(ProcessingException e) {
+        if ("review".equals(e.stage))
+            return "Otázky jsou hotové • teď je nezávisle kontroluji…";
+        if ("repair".equals(e.stage)) {
+            String count = e.rejected > 0 ? " (" + e.rejected + ")" : "";
+            return "Kontrola našla sporné otázky" + count + " • tvořím bezpečné náhrady…";
+        }
+        if ("repair_review".equals(e.stage)) {
+            String round = e.round > 0 ? " • kolo " + e.round : "";
+            return "Náhradní otázky jsou hotové" + round + " • znovu je ověřuji…";
+        }
+        return "Kvíz se ještě bezpečně připravuje • pokračuji ve stejné úloze…";
     }
 
     private JSONObject post(JSONObject body) throws Exception {
@@ -105,7 +137,17 @@ final class ServerQuizClient {
             int status = c.getResponseCode();
             InputStream stream = status >= 200 && status < 300 ? c.getInputStream() : c.getErrorStream();
             String text = read(stream);
-            if (status == 202) throw new ProcessingException();
+            if (status == 202) {
+                String stage = "";
+                int round = 0, rejected = 0;
+                try {
+                    JSONObject processing = new JSONObject(text);
+                    stage = safeCode(processing.optString("stage"));
+                    round = processing.optInt("round", 0);
+                    rejected = processing.optInt("rejected", 0);
+                } catch (Exception ignored) {}
+                throw new ProcessingException(stage, round, rejected);
+            }
             if (status < 200 || status >= 300) {
                 String code = "";
                 String message = statusMessage(status);
@@ -198,16 +240,25 @@ final class ServerQuizClient {
                     || !q.getString("requested_topic").equals(slot.getString("requested_topic"))
                     || q.getBoolean("hard") != slot.getBoolean("hard"))
                 throw new IOException("Server nedodržel plán kvízu.");
-            String key = normalize(q.getString("question"));
+            String question = q.getString("question").trim();
+            if (question.length() < 12 || question.length() > 260)
+                throw new IOException("Otázka má nevhodnou délku pro telefon.");
+            String key = normalize(question);
             if (key.isEmpty() || !seen.add(key)) throw new IOException("Server vrátil duplicitní otázku.");
             JSONArray options = q.getJSONArray("options");
             if (options.length() != 4 || q.getInt("correct") < 0 || q.getInt("correct") > 3)
                 throw new IOException("Server vrátil neplatnou otázku.");
             Set<String> optionKeys = new HashSet<>();
-            for (int j = 0; j < 4; j++) if (!optionKeys.add(normalize(options.getString(j))))
-                throw new IOException("Server vrátil duplicitní možnosti.");
-            if (q.optString("explanation").trim().length() < 20)
-                throw new IOException("U otázky chybí vysvětlení.");
+            for (int j = 0; j < 4; j++) {
+                String option = options.getString(j).trim();
+                if (option.isEmpty() || option.length() > 120)
+                    throw new IOException("Možnost odpovědi je příliš dlouhá pro telefon.");
+                if (!optionKeys.add(normalize(option)))
+                    throw new IOException("Server vrátil duplicitní možnosti.");
+            }
+            String explanation = q.optString("explanation").trim();
+            if (explanation.length() < 20 || explanation.length() > 650)
+                throw new IOException("Vysvětlení má nevhodnou délku.");
         }
     }
 
@@ -232,23 +283,23 @@ final class ServerQuizClient {
 
     static String statusMessage(int status) {
         if (status == 401) return "Aplikace a server nemají stejnou verzi přístupu.";
-        if (status == 403) return "Server odmítl připojení. Tato verze používá přímo aplikační API; pokud chybu vidíte znovu, nainstalujte nejnovější APK.";
-        if (status == 429) return "Server hlásí dočasný limit. Nic se automaticky znovu negeneruje.";
-        if (status >= 500) return "Server kvíz nevydal. Problematické otázky dostaly nejvýše jednu cílenou opravu a ani ta neprošla kontrolou správnosti.";
+        if (status == 403) return "Server odmítl připojení. Pokud chybu vidíte znovu, nainstalujte nejnovější APK.";
+        if (status == 429) return "Server hlásí dočasný limit. Stejný kvíz se automaticky znovu negeneruje.";
+        if (status >= 500) return "Server kvíz nevydal ani po omezených cílených opravách problematických otázek.";
         return "Server odmítl požadavek (HTTP " + status + ").";
     }
 
     static String errorTitle(Exception e) {
         if (e instanceof UnknownHostException || e instanceof ConnectException) return "Nepodařilo se připojit k serveru";
-        if (e instanceof SocketTimeoutException || e instanceof ProcessingException) return "Server ještě připravuje kvíz";
+        if (e instanceof SocketTimeoutException || e instanceof ProcessingException) return "Kvíz potřebuje ještě chvíli";
         if (e instanceof ServerException) return "Kvíz neprošel přípravou";
         return "Příprava byla přerušena";
     }
 
     static String errorMessage(Exception e) {
-        if (e instanceof UnknownHostException) return "Telefon nedokázal najít kvízový server. OpenAI API klíč v telefonu se už nepoužívá.";
+        if (e instanceof UnknownHostException) return "Telefon nedokázal najít kvízový server. OpenAI API klíč v telefonu se nepoužívá.";
         if (e instanceof ConnectException) return "Kvízový server není z tohoto připojení dostupný. Zkuste Wi-Fi nebo mobilní data.";
-        if (e instanceof SocketTimeoutException || e instanceof ProcessingException) return "Server může stále pracovat. Pokračování použije stejné ID přípravy a nenastartuje novou přípravu.";
+        if (e instanceof SocketTimeoutException || e instanceof ProcessingException) return "Příprava je uložená. Pokračování použije stejné ID a naváže přesně tam, kde server skončil.";
         if (e instanceof ServerException || e instanceof IOException) return e.getMessage();
         return "Kvíz se nepodařilo připravit. Zadání zůstalo uložené.";
     }
