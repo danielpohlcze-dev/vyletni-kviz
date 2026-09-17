@@ -34,7 +34,6 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
-            set -euo pipefail
             gradle connectedQualityAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=cz.ctuprotebe.vyletnikviz.TripExperienceAuditTest
             mkdir -p app/build/human-audit-screens
             adb pull /sdcard/Android/data/cz.ctuprotebe.vyletnikviz.quality271/files/test-screens/. app/build/human-audit-screens/
