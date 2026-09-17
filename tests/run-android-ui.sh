@@ -3,7 +3,7 @@ set +e
 gradle connectedQualityAndroidTest
 quiz_test_status=$?
 mkdir -p app/build/ui-screenshots
-adb pull /sdcard/Android/data/cz.ctuprotebe.vyletnikviz.quality26/files/test-screens/. app/build/ui-screenshots/
+adb pull /sdcard/Android/data/cz.ctuprotebe.vyletnikviz.quality271/files/test-screens/. app/build/ui-screenshots/
 if [ "$quiz_test_status" -ne 0 ]; then
   adb logcat -d > app/build/emulator-logcat.txt
 fi
