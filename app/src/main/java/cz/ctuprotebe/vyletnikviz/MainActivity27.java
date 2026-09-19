@@ -107,6 +107,9 @@ public class MainActivity27 extends MainActivity {
         ServerQuizClient.Checkpoint save = () -> {
             if (!prefs.edit().putString("ai_pending", journal.toString()).commit()) throw new IOException("Přípravu nelze uložit.");
         };
+        QuizGeneration.Checkpoint openAiSave = () -> {
+            if (!prefs.edit().putString("ai_pending", journal.toString()).commit()) throw new IOException("Přípravu nelze uložit.");
+        };
         serverClient = new ServerQuizClient(journal, save,
                 text -> runOnUiThread(() -> { if (!isDestroyed()) progress.setText(text); }));
 
@@ -125,14 +128,14 @@ public class MainActivity27 extends MainActivity {
                     complete = serverClient.generate();
                 } catch (Exception primaryError) {
                     if (!isAppDeployCreditLimit(primaryError)) throw primaryError;
-                    markAppDeployCreditLimit(journal, save);
+                    markAppDeployCreditLimit(journal, openAiSave);
                     runOnUiThread(() -> {
                         if (isDestroyed()) return;
                         progress.setText("AppDeploy hlásí kreditní/platební limit • přepínám na OpenAI API…");
                         provider.setText("Zdroj: OpenAI API (záloha) • AppDeploy vrátil HTTP 402");
                         toast("AppDeploy hlásí limit kreditů/platby. Přepínám na druhý zdroj: OpenAI API.");
                     });
-                    complete = generateWithOpenAi(journal, save, progress, provider);
+                    complete = generateWithOpenAi(journal, openAiSave, progress, provider);
                 }
                 finishGeneration(complete);
             } catch (Exception e) {
@@ -321,7 +324,7 @@ public class MainActivity27 extends MainActivity {
         dialog.show();
     }
 
-    @Override void showServerError(Exception e) {
+    void showServerError(Exception e) {
         showProviderError(e);
     }
 
