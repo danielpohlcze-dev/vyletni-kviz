@@ -283,6 +283,7 @@ final class ServerQuizClient {
 
     static String statusMessage(int status) {
         if (status == 401) return "Aplikace a server nemají stejnou verzi přístupu.";
+        if (status == 402) return "AppDeploy hlásí kreditní nebo platební limit (HTTP 402).";
         if (status == 403) return "Server odmítl připojení. Pokud chybu vidíte znovu, nainstalujte nejnovější APK.";
         if (status == 429) return "Server hlásí dočasný limit. Stejný kvíz se automaticky znovu negeneruje.";
         if (status >= 500) return "Server kvíz nevydal ani po omezených cílených opravách problematických otázek.";
