@@ -21,7 +21,11 @@ class OpenAiTransport implements QuizGeneration.Transport {
 
     static final class ApiException extends IOException {
         final int status;
-        ApiException(int status, String message) { super(message); this.status = status; }
+        final String code;
+        ApiException(int status, String message) { this(status, "", message); }
+        ApiException(int status, String code, String message) {
+            super(message); this.status = status; this.code = code == null ? "" : code;
+        }
     }
 
     OpenAiTransport(String apiKey, JSONObject journal, QuizGeneration.Checkpoint checkpoint) {
@@ -128,8 +132,17 @@ class OpenAiTransport implements QuizGeneration.Transport {
                 c.setDoOutput(true);
                 try (OutputStream out = c.getOutputStream()) { out.write(body.toString().getBytes(StandardCharsets.UTF_8)); }
             }
-            int code = c.getResponseCode();
-            if (code < 200 || code >= 300) throw new ApiException(code, statusMessage(code));
+            int httpStatus = c.getResponseCode();
+            if (httpStatus < 200 || httpStatus >= 300) {
+                String raw = readError(c.getErrorStream());
+                String apiCode = "";
+                try {
+                    JSONObject envelope = new JSONObject(raw);
+                    JSONObject error = envelope.optJSONObject("error");
+                    if (error != null) apiCode = safeErrorCode(error.optString("code"));
+                } catch (Exception ignored) {}
+                throw new ApiException(httpStatus, apiCode, statusMessage(httpStatus, apiCode));
+            }
             try (InputStream in = c.getInputStream(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 byte[] buffer = new byte[8192]; int n;
                 while ((n = in.read(buffer)) != -1) {
@@ -142,14 +155,48 @@ class OpenAiTransport implements QuizGeneration.Transport {
         } finally { c.disconnect(); active = null; }
     }
 
-    static String statusMessage(int code) {
+    private static String readError(InputStream in) {
+        if (in == null) return "";
+        try (InputStream source = in; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[4096]; int n;
+            while ((n = source.read(buffer)) != -1 && out.size() < 64 * 1024) out.write(buffer, 0, n);
+            return out.toString("UTF-8");
+        } catch (Exception ignored) { return ""; }
+    }
+
+    private static String safeErrorCode(String value) {
+        return value != null && value.matches("[A-Za-z0-9_.-]{1,80}") ? value : "";
+    }
+
+    static boolean isCreditExhausted(Exception e) {
+        if (!(e instanceof ApiException)) return false;
+        ApiException a = (ApiException) e;
+        if (a.status == 402) return true;
+        if (a.status != 429) return false;
+        return "insufficient_quota".equals(a.code)
+                || "billing_hard_limit_reached".equals(a.code)
+                || "billing_not_active".equals(a.code)
+                || "credits_exhausted".equals(a.code);
+    }
+
+    static String statusMessage(int code) { return statusMessage(code, ""); }
+
+    static String statusMessage(int code, String apiCode) {
         if (code == 401) return "OpenAI odmítlo uložený API klíč. Ověřte jej v Připojení k AI.";
         if (code == 403 || code == 404) return "Projekt nemá přístup k požadovanému modelu nebo funkci (HTTP " + code + ").";
-        if (code == 429) return "OpenAI hlásí limit požadavků nebo vyčerpaný kredit. Zkontrolujte kredit a zkuste pokračovat později.";
+        if (code == 402 || (code == 429 && (
+                "insufficient_quota".equals(apiCode)
+                        || "billing_hard_limit_reached".equals(apiCode)
+                        || "billing_not_active".equals(apiCode)
+                        || "credits_exhausted".equals(apiCode)))) {
+            return "OpenAI API hlásí vyčerpaný kredit nebo platební limit.";
+        }
+        if (code == 429) return "OpenAI hlásí dočasný limit požadavků (HTTP 429). Kredit nemusí být vyčerpaný.";
         if (code >= 500) return "OpenAI má dočasné potíže. Hotová část zůstává uložená; zkuste pokračovat později.";
         return "OpenAI nepřijalo požadavek (HTTP " + code + "). Hotová část zůstává uložená.";
     }
     static String errorTitle(Exception e) {
+        if (isCreditExhausted(e)) return "OpenAI API kredit nestačí";
         if (e instanceof QuizGeneration.ResponseException) return "AI požadavek nedokončila";
         if (e instanceof UnknownHostException || e instanceof ConnectException) return "Nepodařilo se připojit";
         if (e instanceof SocketTimeoutException) return "Čekání na server se přerušilo";
