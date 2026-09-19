@@ -71,6 +71,16 @@ public class OpenAiTransportTest {
         };
         assertThrows(OpenAiTransport.ApiException.class,()->t.call(body()));assertEquals(1,calls[0]);
     }
+    @Test public void distinguishesOpenAiCreditExhaustionFromOrdinaryRateLimit() {
+        OpenAiTransport.ApiException quota = new OpenAiTransport.ApiException(429, "insufficient_quota",
+                OpenAiTransport.statusMessage(429, "insufficient_quota"));
+        OpenAiTransport.ApiException rate = new OpenAiTransport.ApiException(429, "rate_limit_exceeded",
+                OpenAiTransport.statusMessage(429, "rate_limit_exceeded"));
+        assertTrue(OpenAiTransport.isCreditExhausted(quota));
+        assertFalse(OpenAiTransport.isCreditExhausted(rate));
+        assertTrue(quota.getMessage().contains("kredit"));
+        assertTrue(rate.getMessage().contains("dočasný limit"));
+    }
     @Test public void pausePreventsAnyFurtherRequests() throws Exception {
         OpenAiTransport t=new OpenAiTransport("fake-test-key",new JSONObject(),()->{}){
             @Override JSONObject http(String m,String u,JSONObject b){fail("Paused job must not contact API");return null;}
