@@ -21,7 +21,7 @@ public class Version27ActivityTest {
         context.getSharedPreferences("quiz", Context.MODE_PRIVATE).edit().clear().commit();
     }
 
-    @Test public void launcherUsesServerBackedConnectionScreenWithoutPhoneApiKey() {
+    @Test public void launcherShowsPrimaryAndBackupAiProviders() {
         try (ActivityScenario<MainActivity27> ignored = ActivityScenario.launch(MainActivity27.class)) {
             onView(withText("⛰  VÝLETNÍ KVÍZ")).check(matches(isDisplayed()));
             onView(withText("⚙  Připojení k AI")).perform(click());
