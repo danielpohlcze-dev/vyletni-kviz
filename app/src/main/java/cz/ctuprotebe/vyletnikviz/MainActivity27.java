@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * Version 2.7 keeps the complete multiplayer UI/game engine from MainActivity,
+ * Version 2.7.2 keeps the complete multiplayer UI/game engine from MainActivity,
  * but moves primary generation and factual verification to the server.
  * If AppDeploy itself refuses the request with HTTP 402, the app can fail over
  * to the user's locally encrypted OpenAI API key.
