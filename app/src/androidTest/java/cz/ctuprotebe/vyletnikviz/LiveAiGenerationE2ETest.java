@@ -11,7 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.Test;
+import org.junit.Test;\nimport org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
