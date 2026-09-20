@@ -252,12 +252,7 @@ public class MainActivity27 extends MainActivity {
             JSONObject journal = new JSONObject(prefs.getString("ai_pending", ""));
             if (!journal.has("context") || !journal.has("plan")) throw new JSONException("missing plan");
             String from = journal.optString("provider", PROVIDER_APPDEPLOY);
-            clearProviderWork(journal);
-            journal.put("provider", target)
-                    .put("accepted", new JSONArray())
-                    .put("request_id", newRequestId())
-                    .put("provider_switch_count", journal.optInt("provider_switch_count", 0) + 1)
-                    .put("last_switch", from + "_to_" + target);
+            prepareProviderSwitch(journal, target);
             saveJournal(journal);
             prefs.edit().putString(PREF_PROVIDER_EVENT,
                     providerName(from) + " → " + providerName(target) + " (potvrzeno uživatelem).").apply();
@@ -276,6 +271,19 @@ public class MainActivity27 extends MainActivity {
         };
         for (String key : keys) journal.remove(key);
     }
+
+    static void prepareProviderSwitch(JSONObject journal, String target) throws JSONException {
+        if (!PROVIDER_APPDEPLOY.equals(target) && !PROVIDER_OPENAI.equals(target))
+            throw new JSONException("unknown provider");
+        String from = journal.optString("provider", PROVIDER_APPDEPLOY);
+        clearProviderWork(journal);
+        journal.put("provider", target)
+                .put("accepted", new JSONArray())
+                .put("request_id", newRequestId())
+                .put("provider_switch_count", journal.optInt("provider_switch_count", 0) + 1)
+                .put("last_switch", from + "_to_" + target);
+    }
+
 
     static String providerName(String provider) {
         return PROVIDER_OPENAI.equals(provider) ? "OpenAI API" : "AppDeploy";
