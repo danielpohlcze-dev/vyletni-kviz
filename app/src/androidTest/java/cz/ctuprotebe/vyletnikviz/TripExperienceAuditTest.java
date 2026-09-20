@@ -97,7 +97,7 @@ public class TripExperienceAuditTest {
             onView(withText(startsWith("Na tahu: Barča"))).check(matches(isDisplayed()));
             screenshot("ux-07-resumed-game");
 
-            // Vrátíme se domů přes bezpečné uložení a zkontrolujeme skutečnou 2.7 serverovou obrazovku.
+            // Vrátíme se domů přes bezpečné uložení a zkontrolujeme skutečnou 2.7.3 obrazovku připojení.
             onView(withText("Uložit rozehranou hru a skončit")).perform(scrollTo(), click());
             onView(withText("Uložit a skončit")).inRoot(isDialog()).perform(click());
             onView(withText("⚙  Připojení k AI")).perform(click());
