@@ -8,6 +8,7 @@ on:
       - 'app/src/main/**'
       - 'app/src/androidTest/java/cz/ctuprotebe/vyletnikviz/TripExperienceAuditTest.java'
       - 'app/build.gradle'
+      - 'tests/run-human-trip-audit.sh'
 
 jobs:
   human-trip-audit:
