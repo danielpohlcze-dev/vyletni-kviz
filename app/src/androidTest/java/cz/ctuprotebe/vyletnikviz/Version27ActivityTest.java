@@ -46,7 +46,7 @@ public class Version27ActivityTest {
         }
     }
 
-    @Test public void openAiCreditFailureAsksBeforeReturningToAppDeploy() {
+    @Test public void openAiCreditFailureAsksBeforeReturningToAppDeploy() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         context.getSharedPreferences("quiz", Context.MODE_PRIVATE).edit()
                 .putString("ai_pending", new JSONObject().put("provider", MainActivity27.PROVIDER_OPENAI).toString())
