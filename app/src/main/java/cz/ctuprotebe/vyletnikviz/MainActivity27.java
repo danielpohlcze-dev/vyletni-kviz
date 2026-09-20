@@ -12,10 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * Version 2.7.2 keeps the complete multiplayer UI/game engine from MainActivity,
- * but moves primary generation and factual verification to the server.
- * If AppDeploy itself refuses the request with HTTP 402, the app can fail over
- * to the user's locally encrypted OpenAI API key.
+ * Version 2.7.3 uses AppDeploy as the primary quiz provider and can use the
+ * user's encrypted OpenAI API key as a fallback. Provider changes are never
+ * automatic: a confirmed credit/billing failure always asks the user first.
  */
 public class MainActivity27 extends MainActivity {
     static final String PROVIDER_APPDEPLOY = "appdeploy";
@@ -26,7 +25,7 @@ public class MainActivity27 extends MainActivity {
 
     static final class BackupProviderMissingException extends IOException {
         BackupProviderMissingException() {
-            super("AppDeploy hlásí kreditní nebo platební limit (HTTP 402), ale záložní OpenAI API klíč není v telefonu uložený.");
+            super("OpenAI API je zvolená jako záloha, ale v telefonu není uložený API klíč.");
         }
     }
 
@@ -64,8 +63,7 @@ public class MainActivity27 extends MainActivity {
             if (journal.optInt("version") != 27) {
                 if (!journal.has("context") || !journal.has("plan")) throw new JSONException("missing context");
                 journal.put("version", 27).put("provider", PROVIDER_APPDEPLOY).put("request_id", newRequestId());
-                String[] old = {"pending_response", "pending_result", "draft", "accepted", "feedback", "events", "batch_size", "server_result"};
-                for (String key : old) journal.remove(key);
+                clearProviderWork(journal);
                 journal.put("accepted", new JSONArray());
                 if (!prefs.edit().putString("ai_pending", journal.toString()).commit()) throw new IOException();
             }
@@ -80,10 +78,10 @@ public class MainActivity27 extends MainActivity {
 
     @Override void runGeneration(JSONObject journal) {
         if (PROVIDER_OPENAI.equals(journal.optString("provider"))) {
-            runOpenAiFallbackGeneration(journal);
-            return;
+            runOpenAiGeneration(journal);
+        } else {
+            runAppDeployGeneration(journal);
         }
-        runAppDeployGeneration(journal);
     }
 
     private void runAppDeployGeneration(JSONObject journal) {
@@ -96,20 +94,14 @@ public class MainActivity27 extends MainActivity {
         title("CHYSTÁM VÝLETNÍ KVÍZ", cfg.title + " • " + cfg.count + " otázek");
         TextView progress = tv("Vymýšlím otázky pro váš výlet…", 20, true);
         root.addView(progress);
-        TextView provider = tv("Zdroj: AppDeploy • OpenAI API je připravené jako záloha, pokud je uložený klíč.", 15, false);
+        TextView provider = tv("Zdroj: AppDeploy", 15, false);
         root.addView(provider);
         root.addView(tv("Česko, svět, silné okruhy hráčů a občas pravdivá bizarnost. Každou otázku potom nezávisle zkontroluji, aby měla jedinou obhajitelnou odpověď.", 16, false));
-        root.addView(tv("Když kontrola najde spornou otázku, opraví se jen ona. Příprava se průběžně ukládá.", 15, false));
-        root.addView(tv("Pokud AppDeploy vrátí přímo HTTP 402, aplikace označí AppDeploy jako vyčerpaný/platebně omezený a automaticky přepne na záložní OpenAI API. Na jiné chyby se nepřepíná naslepo, aby se stejný placený kvíz negeneroval dvakrát.", 15, false));
+        root.addView(tv("Když AppDeploy jednoznačně oznámí kreditní nebo platební limit, přípravu zastavím a zeptám se, jestli chcete přepnout na OpenAI API. Bez vašeho potvrzení se zdroj nezmění.", 15, false));
         Button pause = secondary("Uložit a pokračovat později");
         root.addView(pause);
 
-        ServerQuizClient.Checkpoint save = () -> {
-            if (!prefs.edit().putString("ai_pending", journal.toString()).commit()) throw new IOException("Přípravu nelze uložit.");
-        };
-        QuizGeneration.Checkpoint openAiSave = () -> {
-            if (!prefs.edit().putString("ai_pending", journal.toString()).commit()) throw new IOException("Přípravu nelze uložit.");
-        };
+        ServerQuizClient.Checkpoint save = () -> saveJournal(journal);
         serverClient = new ServerQuizClient(journal, save,
                 text -> runOnUiThread(() -> { if (!isDestroyed()) progress.setText(text); }));
 
@@ -117,44 +109,35 @@ public class MainActivity27 extends MainActivity {
             pause.setEnabled(false);
             pause.setText("Ukládám přípravu…");
             if (serverClient != null) serverClient.pause();
-            if (aiTransport != null) aiTransport.pause();
             if (generationThread != null) generationThread.interrupt();
         });
 
         generationThread = new Thread(() -> {
             try {
-                JSONObject complete;
-                try {
-                    complete = serverClient.generate();
-                } catch (Exception primaryError) {
-                    if (!isAppDeployCreditLimit(primaryError)) throw primaryError;
-                    markAppDeployCreditLimit(journal, openAiSave);
-                    runOnUiThread(() -> {
-                        if (isDestroyed()) return;
-                        progress.setText("AppDeploy hlásí kreditní/platební limit • přepínám na OpenAI API…");
-                        provider.setText("Zdroj: OpenAI API (záloha) • AppDeploy vrátil HTTP 402");
-                        toast("AppDeploy hlásí limit kreditů/platby. Přepínám na druhý zdroj: OpenAI API.");
-                    });
-                    complete = generateWithOpenAi(journal, openAiSave, progress, provider);
-                }
+                JSONObject complete = serverClient.generate();
                 finishGeneration(complete);
             } catch (Exception e) {
+                if (isAppDeployCreditLimit(e)) {
+                    try { markAppDeployCreditLimit(journal); } catch (Exception ignored) {}
+                }
                 runOnUiThread(() -> {
                     if (isDestroyed()) return;
                     generationRunning = false;
-                    if ((serverClient != null && serverClient.paused) || (aiTransport != null && aiTransport.paused)) {
+                    if (serverClient != null && serverClient.paused) {
                         home();
                         toast("Příprava je uložená. Můžete pokračovat později.");
-                    } else showProviderError(e);
+                    } else {
+                        showProviderError(e);
+                    }
                 });
             } finally {
                 AI_BUSY.set(false);
             }
-        }, "quiz-provider-generation");
+        }, "quiz-appdeploy-generation");
         generationThread.start();
     }
 
-    private void runOpenAiFallbackGeneration(JSONObject journal) {
+    private void runOpenAiGeneration(JSONObject journal) {
         if (!AI_BUSY.compareAndSet(false, true)) {
             toast("Předchozí příprava ještě běží. Zkuste to za chvíli.");
             return;
@@ -162,17 +145,15 @@ public class MainActivity27 extends MainActivity {
         generationRunning = true;
         base();
         title("CHYSTÁM VÝLETNÍ KVÍZ", cfg.title + " • " + cfg.count + " otázek");
-        TextView progress = tv("Navazuji přes záložní OpenAI API…", 20, true);
+        TextView progress = tv("Připravuji kvíz přes OpenAI API…", 20, true);
         root.addView(progress);
-        TextView provider = tv("Zdroj: OpenAI API (záloha) • AppDeploy předtím hlásil HTTP 402", 15, false);
+        TextView provider = tv("Zdroj: OpenAI API", 15, false);
         root.addView(provider);
-        root.addView(tv("Hotové části a identifikátory odpovědí se ukládají. Pokud spojení zakolísá, aplikace navazuje na uloženou OpenAI úlohu místo slepého opakování.", 15, false));
+        root.addView(tv("Hotové části a identifikátory odpovědí se průběžně ukládají. Když OpenAI jednoznačně oznámí vyčerpaný kredit nebo platební limit, zeptám se, jestli chcete zkusit AppDeploy.", 15, false));
         Button pause = secondary("Uložit a pokračovat později");
         root.addView(pause);
 
-        QuizGeneration.Checkpoint save = () -> {
-            if (!prefs.edit().putString("ai_pending", journal.toString()).commit()) throw new IOException("Přípravu nelze uložit.");
-        };
+        QuizGeneration.Checkpoint save = () -> saveJournal(journal);
 
         pause.setOnClickListener(v -> {
             pause.setEnabled(false);
@@ -186,21 +167,23 @@ public class MainActivity27 extends MainActivity {
                 JSONObject complete = generateWithOpenAi(journal, save, progress, provider);
                 finishGeneration(complete);
             } catch (Exception e) {
-                try {
-                    if (OpenAiTransport.isCreditExhausted(e)) markOpenAiCreditLimit(journal, save);
-                } catch (Exception ignored) {}
+                if (OpenAiTransport.isCreditExhausted(e)) {
+                    try { markOpenAiCreditLimit(journal); } catch (Exception ignored) {}
+                }
                 runOnUiThread(() -> {
                     if (isDestroyed()) return;
                     generationRunning = false;
                     if (aiTransport != null && aiTransport.paused) {
                         home();
                         toast("Příprava je uložená. Můžete pokračovat později.");
-                    } else showProviderError(e);
+                    } else {
+                        showProviderError(e);
+                    }
                 });
             } finally {
                 AI_BUSY.set(false);
             }
-        }, "quiz-openai-fallback");
+        }, "quiz-openai-generation");
         generationThread.start();
     }
 
@@ -214,7 +197,7 @@ public class MainActivity27 extends MainActivity {
         save.save();
 
         aiTransport = new OpenAiTransport(key, journal, save, text -> runOnUiThread(() -> {
-            if (!isDestroyed()) providerStatus.setText("Zdroj: OpenAI API (záloha) • " + text);
+            if (!isDestroyed()) providerStatus.setText("Zdroj: OpenAI API • " + text);
         }));
         return new QuizGeneration(journal, aiTransport, save, text -> runOnUiThread(() -> {
             if (!isDestroyed()) progress.setText(text);
@@ -236,25 +219,66 @@ public class MainActivity27 extends MainActivity {
         });
     }
 
-    private void markAppDeployCreditLimit(JSONObject journal, QuizGeneration.Checkpoint save) throws Exception {
-        journal.put("provider", PROVIDER_OPENAI)
-                .put("appdeploy_credit_state", "http_402");
-        if (!journal.has("accepted")) journal.put("accepted", new JSONArray());
-        prefs.edit().putString(PREF_PROVIDER_EVENT,
-                "AppDeploy: kreditní/platební limit (HTTP 402). Přepnuto na OpenAI API.").apply();
-        save.save();
+    private void saveJournal(JSONObject journal) throws IOException {
+        if (!prefs.edit().putString("ai_pending", journal.toString()).commit())
+            throw new IOException("Přípravu nelze uložit.");
     }
 
-    private void markOpenAiCreditLimit(JSONObject journal, QuizGeneration.Checkpoint save) throws Exception {
-        journal.put("openai_credit_state", "exhausted");
+    private void markAppDeployCreditLimit(JSONObject journal) throws Exception {
+        journal.put("provider", PROVIDER_APPDEPLOY)
+                .put("appdeploy_credit_state", "http_402")
+                .put("last_credit_failure", PROVIDER_APPDEPLOY);
         prefs.edit().putString(PREF_PROVIDER_EVENT,
-                "OpenAI API: kredit nebo platební limit vyčerpaný. AppDeploy už předtím hlásil HTTP 402.").apply();
-        save.save();
+                "AppDeploy: kreditní/platební limit (HTTP 402). Čeká se na vaše rozhodnutí.").apply();
+        saveJournal(journal);
+    }
+
+    private void markOpenAiCreditLimit(JSONObject journal) throws Exception {
+        journal.put("provider", PROVIDER_OPENAI)
+                .put("openai_credit_state", "exhausted")
+                .put("last_credit_failure", PROVIDER_OPENAI);
+        prefs.edit().putString(PREF_PROVIDER_EVENT,
+                "OpenAI API: kredit nebo platební limit. Čeká se na vaše rozhodnutí.").apply();
+        saveJournal(journal);
     }
 
     static boolean isAppDeployCreditLimit(Exception e) {
         return e instanceof ServerQuizClient.ServerException
                 && ((ServerQuizClient.ServerException) e).status == 402;
+    }
+
+    private void switchPendingProvider(String target) {
+        try {
+            JSONObject journal = new JSONObject(prefs.getString("ai_pending", ""));
+            if (!journal.has("context") || !journal.has("plan")) throw new JSONException("missing plan");
+            String from = journal.optString("provider", PROVIDER_APPDEPLOY);
+            clearProviderWork(journal);
+            journal.put("provider", target)
+                    .put("accepted", new JSONArray())
+                    .put("request_id", newRequestId())
+                    .put("provider_switch_count", journal.optInt("provider_switch_count", 0) + 1)
+                    .put("last_switch", from + "_to_" + target);
+            saveJournal(journal);
+            prefs.edit().putString(PREF_PROVIDER_EVENT,
+                    providerName(from) + " → " + providerName(target) + " (potvrzeno uživatelem).").apply();
+            restoreGenerationContext(journal.getJSONObject("context"));
+            runGeneration(journal);
+        } catch (Exception e) {
+            toast("Přepnutí zdroje se nepodařilo. Uložené zadání zůstalo zachované.");
+            home();
+        }
+    }
+
+    static void clearProviderWork(JSONObject journal) {
+        String[] keys = {
+                "pending_response", "pending_result", "draft", "accepted", "feedback",
+                "events", "batch_size", "server_result"
+        };
+        for (String key : keys) journal.remove(key);
+    }
+
+    static String providerName(String provider) {
+        return PROVIDER_OPENAI.equals(provider) ? "OpenAI API" : "AppDeploy";
     }
 
     private boolean pendingUsesOpenAi() {
@@ -265,14 +289,42 @@ public class MainActivity27 extends MainActivity {
         }
     }
 
+    private boolean pendingAppDeployCreditLimited() {
+        try {
+            JSONObject journal = new JSONObject(prefs.getString("ai_pending", "{}"));
+            return PROVIDER_APPDEPLOY.equals(journal.optString("provider"))
+                    && "http_402".equals(journal.optString("appdeploy_credit_state"));
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
     void showProviderError(Exception e) {
         home();
 
+        if (isAppDeployCreditLimit(e)) {
+            boolean hasOpenAi = !getSecret().isEmpty();
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this)
+                    .setTitle("AppDeploy má kreditní limit")
+                    .setMessage("AppDeploy vrátil HTTP 402 ještě před dokončením přípravy.\n\n"
+                            + (hasOpenAi
+                            ? "Chcete přepnout tento kvíz na OpenAI API? Přepnutí se provede až po vašem potvrzení a další spotřeba půjde z OpenAI API kreditu."
+                            : "OpenAI záloha zatím není nastavená. Můžete uložit API klíč a potom se rozhodnout, zda na ni přepnout."));
+            if (hasOpenAi) {
+                dialog.setPositiveButton("Přepnout na OpenAI", (d, w) -> switchPendingProvider(PROVIDER_OPENAI))
+                        .setNegativeButton("Zůstat na AppDeploy", null);
+            } else {
+                dialog.setPositiveButton("Nastavit OpenAI zálohu", (d, w) -> connection())
+                        .setNegativeButton("Později", null);
+            }
+            dialog.show();
+            return;
+        }
+
         if (e instanceof BackupProviderMissingException) {
             new AlertDialog.Builder(this)
-                    .setTitle("AppDeploy limit • chybí druhý zdroj")
-                    .setMessage(e.getMessage()
-                            + "\n\nZadání zůstalo uložené. Uložte jednou OpenAI API klíč jako zálohu a potom zvolte Pokračovat v přípravě.")
+                    .setTitle("OpenAI záloha není nastavená")
+                    .setMessage(e.getMessage() + "\n\nZadání zůstalo uložené.")
                     .setPositiveButton("Nastavit OpenAI zálohu", (d, w) -> connection())
                     .setNegativeButton("Později", null)
                     .show();
@@ -281,22 +333,29 @@ public class MainActivity27 extends MainActivity {
 
         if (pendingUsesOpenAi() || e instanceof OpenAiTransport.ApiException
                 || e instanceof QuizGeneration.QualityException) {
-            boolean credit = OpenAiTransport.isCreditExhausted(e);
-            if (credit) {
+            if (OpenAiTransport.isCreditExhausted(e)) {
+                boolean appDeployRecentlyLimited = false;
+                try {
+                    JSONObject journal = new JSONObject(prefs.getString("ai_pending", "{}"));
+                    appDeployRecentlyLimited = "http_402".equals(journal.optString("appdeploy_credit_state"));
+                } catch (Exception ignored) {}
+                String warning = appDeployRecentlyLimited
+                        ? "\n\nAppDeploy u tohoto kvízu už dříve hlásil HTTP 402, takže může být stále nedostupný."
+                        : "";
                 new AlertDialog.Builder(this)
-                        .setTitle("Došel i druhý zdroj")
-                        .setMessage("OpenAI API nyní hlásí vyčerpaný kredit nebo platební limit.\n\n"
-                                + "AppDeploy už předtím vrátil HTTP 402, takže v tuto chvíli není dostupný ani jeden placený zdroj. "
-                                + "Zadání a hotové části zůstaly uložené.")
-                        .setPositiveButton("Připojení k AI", (d, w) -> connection())
-                        .setNegativeButton("Později", null)
+                        .setTitle("OpenAI API má kreditní limit")
+                        .setMessage("OpenAI API nyní hlásí vyčerpaný kredit nebo platební limit."
+                                + warning
+                                + "\n\nChcete zkusit přepnout tento kvíz zpět na AppDeploy? Přepnutí se provede až po vašem potvrzení.")
+                        .setPositiveButton("Zkusit AppDeploy", (d, w) -> switchPendingProvider(PROVIDER_APPDEPLOY))
+                        .setNegativeButton("Zůstat na OpenAI", null)
                         .show();
                 return;
             }
             new AlertDialog.Builder(this)
                     .setTitle(OpenAiTransport.errorTitle(e))
                     .setMessage(OpenAiTransport.errorMessage(e)
-                            + "\n\nZáložní OpenAI příprava zůstala uložená a pokračování naváže na stejný stav.")
+                            + "\n\nOpenAI příprava zůstala uložená a pokračování naváže na stejný stav.")
                     .setPositiveButton("Pokračovat v přípravě", (d, w) -> resumeGeneration())
                     .setNegativeButton("Později", null)
                     .show();
@@ -330,12 +389,12 @@ public class MainActivity27 extends MainActivity {
 
     @Override void connection() {
         base();
-        title("PŘIPOJENÍ K AI", "Primární AppDeploy + automatická OpenAI záloha.");
+        title("PŘIPOJENÍ K AI", "AppDeploy + volitelná OpenAI záloha. Přepnutí vždy potvrzujete.");
 
         TextView primary = tv("1. AppDeploy • primární zdroj", 18, true);
         primary.setTextColor(GREEN);
         root.addView(primary);
-        root.addView(tv("Běžně generuje jako první. Pokud samotná AppDeploy brána vrátí HTTP 402, aplikace to označí jako kreditní/platební limit a nepokouší se stejný požadavek naslepo opakovat.", 15, false));
+        root.addView(tv("Běžně generuje jako první. Pokud AppDeploy vrátí HTTP 402, aplikace přípravu zastaví, ukáže kde limit vznikl a zeptá se, zda chcete použít OpenAI.", 15, false));
 
         boolean saved = !getSecret().isEmpty();
         TextView backup = tv(saved
@@ -343,11 +402,11 @@ public class MainActivity27 extends MainActivity {
                 : "2. OpenAI API • záložní klíč zatím chybí", 18, true);
         backup.setTextColor(saved ? GREEN : RED);
         root.addView(backup);
-        root.addView(tv("Při HTTP 402 z AppDeploy se zobrazí, kde limit vznikl, a pokud je klíč uložený, aplikace řekne „Přepínám na OpenAI API“ a pokračuje přes druhý zdroj.", 15, false));
+        root.addView(tv("Při vyčerpaném OpenAI kreditu se aplikace zase zeptá, zda chcete zkusit AppDeploy. Nikdy sama nepřepne poskytovatele a nespustí druhou placenou přípravu bez potvrzení.", 15, false));
 
         String event = prefs.getString(PREF_PROVIDER_EVENT, "");
         if (!event.isEmpty()) {
-            TextView last = tv("Poslední přepnutí: " + event, 14, true);
+            TextView last = tv("Poslední stav: " + event, 14, true);
             last.setTextColor(Color.rgb(120, 80, 20));
             root.addView(last);
         }
@@ -357,7 +416,7 @@ public class MainActivity27 extends MainActivity {
                 : "Vložte záložní OpenAI API klíč", "");
         key.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         root.addView(key);
-        root.addView(tv("Klíč je uložený šifrovaně přes Android Keystore a není součástí APK ani GitHubu. Záložní generování se účtuje z vašeho OpenAI API kreditu.", 14, false));
+        root.addView(tv("Klíč je uložený šifrovaně přes Android Keystore a není součástí APK ani GitHubu. Použije se jen po vašem potvrzení přepnutí na OpenAI.", 14, false));
 
         Button save = btn(saved ? "Ponechat nebo změnit záložní klíč" : "Uložit záložní OpenAI klíč");
         save.setOnClickListener(v -> {
@@ -371,10 +430,20 @@ public class MainActivity27 extends MainActivity {
                 return;
             }
             try {
+                boolean waitingForChoice = pendingAppDeployCreditLimited();
                 setSecret(value);
                 key.setText("");
-                toast("OpenAI záloha je připravená");
-                connection();
+                if (waitingForChoice) {
+                    new AlertDialog.Builder(this)
+                            .setTitle("OpenAI záloha je připravená")
+                            .setMessage("AppDeploy u uloženého kvízu hlásil HTTP 402. Chcete teď přepnout přípravu na OpenAI API?")
+                            .setPositiveButton("Přepnout na OpenAI", (d, w) -> switchPendingProvider(PROVIDER_OPENAI))
+                            .setNegativeButton("Ne, zatím ne", (d, w) -> connection())
+                            .show();
+                } else {
+                    toast("OpenAI záloha je připravená");
+                    connection();
+                }
             } catch (Exception ex) {
                 toast("Klíč se nepodařilo bezpečně uložit");
             }
@@ -385,7 +454,7 @@ public class MainActivity27 extends MainActivity {
             Button remove = secondary("Odstranit záložní OpenAI klíč");
             remove.setOnClickListener(v -> new AlertDialog.Builder(this)
                     .setTitle("Odstranit záložní klíč?")
-                    .setMessage("AppDeploy bude dál fungovat jako primární zdroj, ale při jeho HTTP 402 už nebude kam automaticky přepnout.")
+                    .setMessage("AppDeploy bude dál fungovat jako primární zdroj. Při jeho kreditním limitu ale nebude možné přepnout na OpenAI, dokud klíč znovu nenastavíte.")
                     .setPositiveButton("Odstranit", (d, w) -> {
                         clearSecret();
                         toast("Záložní OpenAI klíč byl odstraněn");
@@ -394,6 +463,12 @@ public class MainActivity27 extends MainActivity {
                     .setNegativeButton("Ponechat", null)
                     .show());
             root.addView(remove);
+        }
+
+        if (prefs.contains("ai_pending")) {
+            Button pending = secondary("Zpět k uložené přípravě");
+            pending.setOnClickListener(v -> resumeGeneration());
+            root.addView(pending);
         }
 
         Button back = secondary("Zpět");
