@@ -15,6 +15,7 @@ import org.junit.Test;\nimport org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
+@Ignore("Paid live AI test: run only explicitly with a configured provider")
 public class LiveAiGenerationE2ETest {
     private static final String TAG = "LiveAiE2E";
     private static final String REQUEST_ID = "vk27_android_ai_live_20260917_005";
