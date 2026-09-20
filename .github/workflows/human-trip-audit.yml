@@ -36,7 +36,7 @@ jobs:
           script: |
             gradle connectedQualityAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=cz.ctuprotebe.vyletnikviz.TripExperienceAuditTest
             mkdir -p app/build/human-audit-screens
-            adb pull /sdcard/Android/data/cz.ctuprotebe.vyletnikviz.quality272/files/test-screens/. app/build/human-audit-screens/
+            adb pull /sdcard/Android/data/cz.ctuprotebe.vyletnikviz.quality273/files/test-screens/. app/build/human-audit-screens/
       - name: Uložit lidský UX audit
         if: always()
         uses: actions/upload-artifact@v4
