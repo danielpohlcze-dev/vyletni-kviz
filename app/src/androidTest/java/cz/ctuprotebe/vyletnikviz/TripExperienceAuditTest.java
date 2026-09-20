@@ -102,8 +102,9 @@ public class TripExperienceAuditTest {
             onView(withText("Uložit a skončit")).inRoot(isDialog()).perform(click());
             onView(withText("⚙  Připojení k AI")).perform(click());
             onView(withText("PŘIPOJENÍ K AI")).check(matches(isDisplayed()));
-            onView(withText("✓ V telefonu není potřeba OpenAI API klíč")).check(matches(isDisplayed()));
-            onView(withText(containsString("Server vytvoří otázky"))).check(matches(isDisplayed()));
+            onView(withText("1. AppDeploy • primární zdroj")).check(matches(isDisplayed()));
+            onView(withText("2. OpenAI API • záložní klíč zatím chybí")).check(matches(isDisplayed()));
+            onView(withText(containsString("Při HTTP 402 z AppDeploy"))).check(matches(isDisplayed()));
             screenshot("ux-08-server-connection");
         }
     }
