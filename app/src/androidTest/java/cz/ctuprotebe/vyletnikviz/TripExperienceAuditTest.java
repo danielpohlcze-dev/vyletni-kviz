@@ -82,6 +82,14 @@ public class TripExperienceAuditTest {
             onView(withText("Podzimní Haná")).check(matches(isDisplayed()));
             onView(withText("„Výlet, na který chceme vzpomínat“")).check(matches(isDisplayed()));
             screenshot("ux-06-chronicle");
+
+            onView(withText("Podzimní Haná")).perform(click());
+            onView(withText("🗑 Odebrat výlet z kroniky")).perform(scrollTo(), click());
+            onView(withText("Odebrat výlet z kroniky?")).inRoot(isDialog()).check(matches(isDisplayed()));
+            onView(withText("Odebrat")).inRoot(isDialog()).perform(click());
+            onView(withText("KRONIKA VÝLETŮ")).check(matches(isDisplayed()));
+            onView(withText("Zatím tu není žádný odehraný výlet.")).check(matches(isDisplayed()));
+            screenshot("ux-06b-chronicle-after-delete");
         }
     }
 
