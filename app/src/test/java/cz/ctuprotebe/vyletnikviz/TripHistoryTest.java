@@ -30,6 +30,16 @@ public class TripHistoryTest {
         JSONObject c=trip();c.getJSONArray("questions").getJSONObject(0).put("correct",4);
         assertThrows(Exception.class,()->TripHistory.parse(TripHistory.PREFIX+c));
     }
+    @Test public void removesOnlySelectedTripAndKeepsTheRestInOrder() throws Exception {
+        JSONObject first=trip().put("id",1).put("title","Test 1");
+        JSONObject second=trip().put("id",2).put("title","Skutečný výlet");
+        JSONObject third=trip().put("id",3).put("title","Test 2");
+        JSONArray result=TripHistory.removeAt(new JSONArray().put(first).put(second).put(third),0);
+        assertEquals(2,result.length());
+        assertEquals("Skutečný výlet",result.getJSONObject(0).getString("title"));
+        assertEquals("Test 2",result.getJSONObject(1).getString("title"));
+        assertThrows(Exception.class,()->TripHistory.removeAt(result,5));
+    }
     @Test public void recognizesExistingTripWithoutCountingItAgain() throws Exception {
         assertTrue(TripHistory.contains(new JSONArray().put(trip()),123));
         assertFalse(TripHistory.contains(new JSONArray().put(trip()),124));
