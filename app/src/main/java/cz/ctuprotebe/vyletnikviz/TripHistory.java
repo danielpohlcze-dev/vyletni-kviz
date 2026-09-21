@@ -40,6 +40,12 @@ final class TripHistory {
         trip.put("winner", String.join(" a ", winners));
         return trip;
     }
+    static JSONArray removeAt(JSONArray history, int index) throws JSONException {
+        if (history == null || index < 0 || index >= history.length()) throw new JSONException("Neplatný záznam výletu.");
+        JSONArray out = new JSONArray();
+        for (int i = 0; i < history.length(); i++) if (i != index) out.put(history.get(i));
+        return out;
+    }
     static boolean contains(JSONArray history, long id) throws JSONException {
         for (int i = 0; i < history.length(); i++) if (history.getJSONObject(i).optLong("id") == id) return true;
         return false;
